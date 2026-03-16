@@ -246,9 +246,80 @@
       line-height: 1.6;
     }
 
-    @media (max-width: 540px) {
+    @media (max-width: 640px) {
+      body { padding: 1rem 0.75rem; }
+
       .header { flex-direction: column; }
-      .metric-card { min-width: calc(50% - 5px); }
+      .header-title { font-size: 18px; }
+
+      /* Presupuesto */
+      .budget-row { flex-direction: column; align-items: stretch; gap: 12px; }
+      .preset-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
+      .preset-btn { text-align: center; padding: 10px 12px; font-size: 14px; }
+      .slider-group { min-width: unset; }
+      .budget-input-wrap input[type=number] { width: 80px; }
+
+      /* Tabla → tarjetas en móvil */
+      .table-wrap table thead { display: none; }
+      .table-wrap table,
+      .table-wrap table tbody,
+      .table-wrap table tr,
+      .table-wrap table td { display: block; width: 100%; }
+      .table-wrap table tr {
+        background: var(--bg-secondary);
+        border-radius: var(--radius-md);
+        padding: 12px;
+        margin-bottom: 8px;
+        border: 0.5px solid var(--border-light);
+      }
+      .table-wrap table tr:last-child { margin-bottom: 0; }
+      .table-wrap table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 4px 0;
+        border-bottom: none;
+        font-size: 13px;
+      }
+      .table-wrap table td::before {
+        content: attr(data-label);
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        color: var(--text-secondary);
+        flex-shrink: 0;
+        margin-right: 12px;
+      }
+      .table-wrap table td:first-child {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+      .table-wrap table td:first-child::before { display: none; }
+      .total-row td { background: transparent; border-top: none; }
+      .total-row { border-top: 2px solid var(--border-medium) !important; }
+
+      /* Métricas */
+      .metrics-grid { flex-direction: column; }
+      .metric-card {
+        min-width: unset;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+      }
+      .metric-card .metric-label { margin-bottom: 0; }
+      .metric-card .metric-value { font-size: 20px; text-align: right; }
+      .metric-card .metric-sub { display: none; }
+
+      /* Gráfico */
+      .chart-wrap { height: 300px; }
+      .chart-legend { gap: 8px; }
+      .legend-item span { font-size: 11px; }
+
+      /* Cards */
+      .card { padding: 1rem; }
     }
   </style>
 </head>
@@ -367,28 +438,28 @@
     document.getElementById('rubroTable').innerHTML =
       res.map((r, i) => `
         <tr>
-          <td style="font-weight:500">${r.name}</td>
-          <td><span class="badge ${badgeClass(r.type)}">${badgeLabel(r.type)}</span></td>
-          <td>
+          <td data-label="" style="font-weight:500">${r.name}</td>
+          <td data-label="Objetivo"><span class="badge ${badgeClass(r.type)}">${badgeLabel(r.type)}</span></td>
+          <td data-label="% Inversión">
             <div style="display:flex;align-items:center;gap:6px">
               <input class="cell-input" type="number" value="${r.pct}" min="0" max="100" step="1" oninput="updatePct(${i}, this.value)" style="width:52px">
               <span style="color:var(--text-secondary);font-size:12px">%</span>
             </div>
           </td>
-          <td>$${r.inv.toFixed(0)}</td>
-          <td>
+          <td data-label="Inversión">$${r.inv.toFixed(0)}</td>
+          <td data-label="CPL aprox">
             <input class="cell-input" type="number" value="${r.cpl}" min="0.01" step="0.01" oninput="updateCpl(${i}, this.value)" style="width:72px">
           </td>
-          <td style="font-weight:600">${r.leads.toLocaleString()}</td>
+          <td data-label="Resultados" style="font-weight:600">${r.leads.toLocaleString()}</td>
         </tr>
       `).join('') +
       `<tr class="total-row">
-        <td>Total</td>
-        <td></td>
-        <td style="${Math.round(totalPct) !== 100 ? 'color:var(--text-danger)' : ''}">${totalPct.toFixed(0)}%</td>
-        <td>$${totalInv.toFixed(0)}</td>
-        <td></td>
-        <td>${totalLeads.toLocaleString()}</td>
+        <td data-label="">Total</td>
+        <td data-label=""></td>
+        <td data-label="% Total" style="${Math.round(totalPct) !== 100 ? 'color:var(--text-danger)' : ''}">${totalPct.toFixed(0)}%</td>
+        <td data-label="Inversión total">$${totalInv.toFixed(0)}</td>
+        <td data-label=""></td>
+        <td data-label="Total resultados">${totalLeads.toLocaleString()}</td>
       </tr>`;
 
     document.getElementById('pctWarning').style.display =
@@ -403,11 +474,11 @@
     const total = conv + leads;
 
     document.getElementById('metricCards').innerHTML = `
-      <div class="metric-card"><div class="metric-label">Inversión mensual</div><div class="metric-value">$${budget.toLocaleString()}</div><div class="metric-sub">presupuesto total</div></div>
-      <div class="metric-card"><div class="metric-label">Conversaciones (DM)</div><div class="metric-value">${conv.toLocaleString()}</div><div class="metric-sub">Papel Tapiz</div></div>
-      <div class="metric-card"><div class="metric-label">Leads formulario</div><div class="metric-value">${leads.toLocaleString()}</div><div class="metric-sub">5 rubros</div></div>
-      <div class="metric-card"><div class="metric-label">Seguidores IG</div><div class="metric-value">${seg.toLocaleString()}</div><div class="metric-sub">crecimiento comunidad</div></div>
-      <div class="metric-card"><div class="metric-label">Total resultados</div><div class="metric-value">${total.toLocaleString()}</div><div class="metric-sub">conv. + leads</div></div>
+      <div class="metric-card"><div><div class="metric-label">Inversión mensual</div><div class="metric-sub">presupuesto total</div></div><div class="metric-value">$${budget.toLocaleString()}</div></div>
+      <div class="metric-card"><div><div class="metric-label">Conversaciones (DM)</div><div class="metric-sub">Papel Tapiz</div></div><div class="metric-value">${conv.toLocaleString()}</div></div>
+      <div class="metric-card"><div><div class="metric-label">Leads formulario</div><div class="metric-sub">5 rubros</div></div><div class="metric-value">${leads.toLocaleString()}</div></div>
+      <div class="metric-card"><div><div class="metric-label">Seguidores IG</div><div class="metric-sub">crecimiento comunidad</div></div><div class="metric-value">${seg.toLocaleString()}</div></div>
+      <div class="metric-card"><div><div class="metric-label">Total resultados</div><div class="metric-sub">conv. + leads</div></div><div class="metric-value">${total.toLocaleString()}</div></div>
     `;
   }
 
