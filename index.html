@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora de Inversión Meta — Serrano & Bustamante</title>
+  <style>
+    :root {
+      --bg-primary: #1e1e1c;
+      --bg-secondary: #2a2a28;
+      --bg-info: #0C447C;
+      --text-primary: #f0ede8;
+      --text-secondary: #9a9990;
+      --text-info: #85B7EB;
+      --text-danger: #F09595;
+      --border-light: rgba(255,255,255,0.10);
+      --border-medium: rgba(255,255,255,0.18);
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --font: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 1.75rem;
+    }
+    .header-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .header-sub {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 3px;
+    }
+    .header-note {
+      font-size: 11px;
+      color: var(--text-secondary);
+      background: var(--bg-primary);
+      border: 0.5px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: 6px 12px;
+      align-self: flex-start;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-primary);
+      border: 0.5px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+
+    /* Presupuesto */
+    .budget-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .preset-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .preset-btn {
+      border: 0.5px solid var(--border-medium);
+      border-radius: var(--radius-md);
+      background: transparent;
+      color: var(--text-primary);
+      padding: 7px 16px;
+      font-size: 13px;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }
+    .preset-btn:hover { background: var(--bg-secondary); }
+    .preset-btn.active {
+      background: var(--bg-info);
+      border-color: transparent;
+      color: var(--text-info);
+      font-weight: 600;
+    }
+    .slider-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 200px;
+    }
+    .slider-group input[type=range] {
+      flex: 1;
+      accent-color: #378ADD;
+    }
+    .budget-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .budget-input-wrap span { color: var(--text-secondary); }
+    .budget-input-wrap input[type=number] {
+      background: transparent;
+      border: 0.5px solid var(--border-medium);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-family: var(--font);
+      font-size: 15px;
+      font-weight: 600;
+      padding: 5px 10px;
+      width: 90px;
+      text-align: right;
+    }
+    .budget-input-wrap input[type=number]:focus {
+      outline: none;
+      border-color: #378ADD;
+    }
+
+    /* Tabla */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--text-secondary);
+      text-align: left;
+      padding: 8px 10px;
+      border-bottom: 0.5px solid var(--border-light);
+      white-space: nowrap;
+    }
+    td {
+      padding: 8px 10px;
+      border-bottom: 0.5px solid var(--border-light);
+      vertical-align: middle;
+      color: var(--text-primary);
+    }
+    tr:last-child td { border-bottom: none; }
+    .total-row td {
+      font-weight: 600;
+      background: var(--bg-secondary);
+      border-top: 0.5px solid var(--border-medium);
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .badge-conv { background: #085041; color: #9FE1CB; }
+    .badge-lead { background: #0C447C; color: #B5D4F4; }
+    .badge-ig   { background: #633806; color: #FAC775; }
+
+    input[type=number].cell-input {
+      background: transparent;
+      border: 0.5px solid var(--border-medium);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-family: var(--font);
+      font-size: 13px;
+      padding: 4px 8px;
+      text-align: right;
+    }
+    input[type=number].cell-input:focus { outline: none; border-color: #378ADD; }
+
+    .pct-warning {
+      font-size: 12px;
+      color: var(--text-danger);
+      margin-top: 8px;
+      display: none;
+    }
+
+    /* Métricas */
+    .metrics-grid {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+    .metric-card {
+      background: var(--bg-primary);
+      border: 0.5px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: .875rem 1rem;
+      flex: 1;
+      min-width: 130px;
+    }
+    .metric-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+    .metric-value { font-size: 22px; font-weight: 600; color: var(--text-primary); }
+    .metric-sub   { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+
+    /* Gráfico */
+    .chart-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .legend-item { display: flex; align-items: center; gap: 5px; }
+    .legend-dot  { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+    .chart-wrap  { position: relative; width: 100%; height: 360px; }
+
+    /* Notas finales */
+    .footer-note {
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-align: center;
+      margin-top: 1.5rem;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 540px) {
+      .header { flex-direction: column; }
+      .metric-card { min-width: calc(50% - 5px); }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div>
+      <div class="header-title">Calculadora de inversión Meta</div>
+      <div class="header-sub">Serrano & Bustamante — Estimaciones de rendimiento</div>
+    </div>
+    <div class="header-note">Las cifras son estimaciones objetivo, no garantías.</div>
+  </div>
+
+  <!-- Presupuesto -->
+  <div class="card">
+    <div class="section-label">Presupuesto mensual</div>
+    <div class="budget-row">
+      <div class="preset-group">
+        <button class="preset-btn" onclick="setPreset(600)">$600</button>
+        <button class="preset-btn active" onclick="setPreset(1000)">$1,000</button>
+        <button class="preset-btn" onclick="setPreset(1500)">$1,500</button>
+        <button class="preset-btn" id="customBtn" onclick="setCustomActive()">Personalizado</button>
+      </div>
+      <div class="slider-group">
+        <input type="range" id="budgetSlider" min="200" max="5000" step="50" value="1000" oninput="onSlider(this.value)">
+        <div class="budget-input-wrap">
+          <span>$</span>
+          <input type="number" id="budgetInput" value="1000" min="200" max="50000" step="50" oninput="onInput(this.value)">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="card">
+    <div class="section-label">Distribución por rubro</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="min-width:160px">Rubro</th>
+            <th>Objetivo</th>
+            <th style="min-width:90px">% Inversión</th>
+            <th>Inversión</th>
+            <th>CPL aprox ($)</th>
+            <th>Resultados est.</th>
+          </tr>
+        </thead>
+        <tbody id="rubroTable"></tbody>
+      </table>
+    </div>
+    <div class="pct-warning" id="pctWarning">⚠ Los porcentajes no suman 100% — ajusta para resultados precisos.</div>
+  </div>
+
+  <!-- Métricas -->
+  <div class="metrics-grid" id="metricCards"></div>
+
+  <!-- Gráfico -->
+  <div class="card">
+    <div class="section-label">Resultados estimados por rubro</div>
+    <div class="chart-legend" id="chartLegend"></div>
+    <div class="chart-wrap">
+      <canvas id="rubroChart"></canvas>
+    </div>
+  </div>
+
+  <p class="footer-note">
+    CPL = Costo por resultado. Los valores son estimaciones basadas en benchmarks de la industria.<br>
+    Actualiza el CPL con tus datos reales para proyecciones más precisas.
+  </p>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<script>
+  const RUBROS_DEFAULT = [
+    { name: 'Papel Tapiz — DM',          obj: 'Conversaciones', pct: 15, cpl: 0.60, type: 'conv' },
+    { name: 'Papel Tapiz — Formulario',  obj: 'Lead',           pct: 15, cpl: 1.90, type: 'lead' },
+    { name: 'Iluminación — Formulario',  obj: 'Lead',           pct: 15, cpl: 1.90, type: 'lead' },
+    { name: 'Mobiliario — Formulario',   obj: 'Lead',           pct: 15, cpl: 1.90, type: 'lead' },
+    { name: 'Diseño / Remodelación',     obj: 'Lead',           pct: 15, cpl: 2.50, type: 'lead' },
+    { name: 'Domótica — Formulario',     obj: 'Lead',           pct: 15, cpl: 1.90, type: 'lead' },
+    { name: 'Seguidores en IG',          obj: 'Seguidor',       pct: 10, cpl: 0.05, type: 'ig'   },
+  ];
+
+  const COLORS = ['#1D9E75','#378ADD','#5DCAA5','#185FA5','#BA7517','#3B6D11','#EF9F27'];
+
+  let budget = 1000;
+  let rubros = RUBROS_DEFAULT.map(r => ({ ...r }));
+  let chart = null;
+
+  function badgeClass(type) {
+    return type === 'conv' ? 'badge-conv' : type === 'ig' ? 'badge-ig' : 'badge-lead';
+  }
+  function badgeLabel(type) {
+    return type === 'conv' ? 'Conversación' : type === 'ig' ? 'Seguidor' : 'Lead';
+  }
+
+  function calcResults() {
+    return rubros.map(r => ({
+      ...r,
+      inv: budget * r.pct / 100,
+      leads: Math.round((budget * r.pct / 100) / r.cpl),
+    }));
+  }
+
+  function renderTable() {
+    const res = calcResults();
+    const totalPct = rubros.reduce((s, r) => s + r.pct, 0);
+    const totalInv = res.reduce((s, r) => s + r.inv, 0);
+    const totalLeads = res.reduce((s, r) => s + r.leads, 0);
+
+    document.getElementById('rubroTable').innerHTML =
+      res.map((r, i) => `
+        <tr>
+          <td style="font-weight:500">${r.name}</td>
+          <td><span class="badge ${badgeClass(r.type)}">${badgeLabel(r.type)}</span></td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px">
+              <input class="cell-input" type="number" value="${r.pct}" min="0" max="100" step="1" oninput="updatePct(${i}, this.value)" style="width:52px">
+              <span style="color:var(--text-secondary);font-size:12px">%</span>
+            </div>
+          </td>
+          <td>$${r.inv.toFixed(0)}</td>
+          <td>
+            <input class="cell-input" type="number" value="${r.cpl}" min="0.01" step="0.01" oninput="updateCpl(${i}, this.value)" style="width:72px">
+          </td>
+          <td style="font-weight:600">${r.leads.toLocaleString()}</td>
+        </tr>
+      `).join('') +
+      `<tr class="total-row">
+        <td>Total</td>
+        <td></td>
+        <td style="${Math.round(totalPct) !== 100 ? 'color:var(--text-danger)' : ''}">${totalPct.toFixed(0)}%</td>
+        <td>$${totalInv.toFixed(0)}</td>
+        <td></td>
+        <td>${totalLeads.toLocaleString()}</td>
+      </tr>`;
+
+    document.getElementById('pctWarning').style.display =
+      Math.round(totalPct) !== 100 ? 'block' : 'none';
+  }
+
+  function renderMetrics() {
+    const res = calcResults();
+    const conv  = res[0].leads;
+    const leads = res.slice(1, 6).reduce((s, r) => s + r.leads, 0);
+    const seg   = res[6].leads;
+    const total = conv + leads;
+
+    document.getElementById('metricCards').innerHTML = `
+      <div class="metric-card"><div class="metric-label">Inversión mensual</div><div class="metric-value">$${budget.toLocaleString()}</div><div class="metric-sub">presupuesto total</div></div>
+      <div class="metric-card"><div class="metric-label">Conversaciones (DM)</div><div class="metric-value">${conv.toLocaleString()}</div><div class="metric-sub">Papel Tapiz</div></div>
+      <div class="metric-card"><div class="metric-label">Leads formulario</div><div class="metric-value">${leads.toLocaleString()}</div><div class="metric-sub">5 rubros</div></div>
+      <div class="metric-card"><div class="metric-label">Seguidores IG</div><div class="metric-value">${seg.toLocaleString()}</div><div class="metric-sub">crecimiento comunidad</div></div>
+      <div class="metric-card"><div class="metric-label">Total resultados</div><div class="metric-value">${total.toLocaleString()}</div><div class="metric-sub">conv. + leads</div></div>
+    `;
+  }
+
+  function renderChart() {
+    const res = calcResults();
+    const labels = res.map(r => r.name.length > 22 ? r.name.slice(0, 20) + '…' : r.name);
+    const data   = res.map(r => r.leads);
+
+    document.getElementById('chartLegend').innerHTML = res.map((r, i) =>
+      `<div class="legend-item">
+        <div class="legend-dot" style="background:${COLORS[i]}"></div>
+        <span>${r.name}</span>
+      </div>`
+    ).join('');
+
+    if (chart) { chart.destroy(); }
+    Chart.register(ChartDataLabels);
+    chart = new Chart(document.getElementById('rubroChart'), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          data,
+          backgroundColor: COLORS,
+          borderRadius: 6,
+          borderSkipped: false,
+          barPercentage: 0.7,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: {
+          padding: { top: 30 },
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#333',
+            titleColor: '#fff',
+            bodyColor: '#fff',
+            padding: 10,
+            cornerRadius: 8,
+            callbacks: {
+              label: ctx => ' ' + ctx.raw.toLocaleString() + ' resultados',
+            },
+          },
+          datalabels: {
+            anchor: 'end',
+            align: 'top',
+            color: '#f0ede8',
+            font: { size: 12, weight: '600' },
+            formatter: val => val.toLocaleString(),
+          },
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { color: '#9a9990', font: { size: 11 }, maxRotation: 35 },
+          },
+          y: {
+            grid: { color: 'rgba(255,255,255,0.06)' },
+            ticks: { color: '#9a9990', font: { size: 11 } },
+            beginAtZero: true,
+          },
+        },
+      },
+    });
+  }
+
+  function render() { renderTable(); renderMetrics(); renderChart(); }
+
+  function updatePct(i, val) { rubros[i].pct = parseFloat(val) || 0; render(); }
+  function updateCpl(i, val) { rubros[i].cpl = parseFloat(val) || 0.01; render(); }
+
+  function setPreset(val) {
+    budget = val;
+    document.getElementById('budgetSlider').value = val;
+    document.getElementById('budgetInput').value = val;
+    rubros = RUBROS_DEFAULT.map(r => ({ ...r }));
+    document.querySelectorAll('.preset-btn').forEach((b, i) => {
+      b.classList.toggle('active', [600, 1000, 1500].indexOf(val) === i);
+    });
+    render();
+  }
+
+  function setCustomActive() {
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('customBtn').classList.add('active');
+  }
+
+  function onSlider(val) {
+    budget = parseInt(val);
+    document.getElementById('budgetInput').value = val;
+    setCustomActive();
+    render();
+  }
+
+  function onInput(val) {
+    budget = parseInt(val) || 0;
+    document.getElementById('budgetSlider').value = Math.min(5000, budget);
+    setCustomActive();
+    render();
+  }
+
+  render();
+</script>
+</body>
+</html>
