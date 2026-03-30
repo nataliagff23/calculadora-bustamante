@@ -30,9 +30,15 @@
       padding: 2rem 1rem;
     }
 
-    .container {
-      max-width: 900px;
+    .app-layout {
+      display: flex;
+      max-width: 1100px;
       margin: 0 auto;
+      gap: 1.25rem;
+    }
+    .container {
+      flex: 1;
+      min-width: 0;
     }
 
     /* Header */
@@ -63,6 +69,54 @@
       padding: 6px 12px;
       align-self: flex-start;
     }
+
+    /* Sidebar de navegación */
+    .sidebar {
+      width: 200px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 2rem;
+      align-self: flex-start;
+    }
+    .sidebar-brand {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      padding: 0 12px;
+      margin-bottom: 4px;
+    }
+    .sidebar-sub {
+      font-size: 11px;
+      color: var(--text-secondary);
+      padding: 0 12px;
+      margin-bottom: 1.25rem;
+    }
+    .tab-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: all .2s;
+      text-align: left;
+    }
+    .tab-btn:hover { color: var(--text-primary); background: var(--bg-primary); }
+    .tab-btn.active {
+      background: var(--bg-info);
+      color: var(--text-info);
+      font-weight: 600;
+    }
+    .tab-section { display: none; }
+    .tab-section.active { display: block; }
 
     /* Cards */
     .card {
@@ -237,6 +291,258 @@
     .legend-dot  { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
     .chart-wrap  { position: relative; width: 100%; height: 360px; }
 
+    /* ── Panel de Seguimiento ── */
+    .day-selector {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .day-btn {
+      background: transparent;
+      border: 0.5px solid var(--border-medium);
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 8px 10px;
+      cursor: pointer;
+      transition: all .2s;
+      flex: 1;
+      text-align: center;
+      min-width: 0;
+    }
+    .day-btn:hover { color: var(--text-primary); background: var(--bg-secondary); }
+    .day-btn.active {
+      background: var(--bg-info);
+      color: var(--text-info);
+      font-weight: 600;
+      border-color: transparent;
+    }
+    .day-btn .day-name { display: block; font-size: 12px; }
+    .day-btn .day-date { display: block; font-size: 10px; opacity: 0.7; margin-top: 2px; }
+    .day-btn.has-data { border-color: #1D9E75; }
+    .day-btn.has-data:not(.active) { color: #1D9E75; }
+
+    .week-summary-row td { font-size: 12px; }
+    .week-summary-row:hover td { background: rgba(255,255,255,0.03); }
+
+    .week-selector {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .week-selector label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    .week-selector input[type=date] {
+      background: transparent;
+      border: 0.5px solid var(--border-medium);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-family: var(--font);
+      font-size: 13px;
+      padding: 6px 10px;
+    }
+    .week-selector input[type=date]:focus {
+      outline: none;
+      border-color: #378ADD;
+    }
+    .week-selector .week-nav-btn {
+      background: transparent;
+      border: 0.5px solid var(--border-medium);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-family: var(--font);
+      font-size: 13px;
+      padding: 6px 12px;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .week-selector .week-nav-btn:hover { background: var(--bg-primary); }
+
+    .track-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .track-table th {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--text-secondary);
+      text-align: center;
+      padding: 8px 4px;
+      border-bottom: 0.5px solid var(--border-light);
+      white-space: nowrap;
+    }
+    .track-table th:first-child { text-align: left; }
+    .track-table td {
+      padding: 6px 4px;
+      border-bottom: 0.5px solid var(--border-light);
+      text-align: center;
+      color: var(--text-primary);
+    }
+    .track-table td:first-child {
+      text-align: left;
+      font-weight: 500;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .track-table tr:last-child td { border-bottom: none; }
+    .track-table .total-row td {
+      font-weight: 600;
+      background: var(--bg-secondary);
+      border-top: 0.5px solid var(--border-medium);
+    }
+    .track-table input[type=number] {
+      background: transparent;
+      border: 0.5px solid var(--border-medium);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-family: var(--font);
+      font-size: 13px;
+      padding: 4px 2px;
+      text-align: center;
+      width: 48px;
+    }
+    .track-table input[type=number]:focus { outline: none; border-color: #378ADD; }
+
+    .track-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 1rem;
+    }
+    .track-metric-card {
+      background: var(--bg-secondary);
+      border: 0.5px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      text-align: center;
+    }
+    .track-metric-card .tm-value {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .track-metric-card .tm-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .rubros-track-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .rubros-track-table th {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--text-secondary);
+      text-align: center;
+      padding: 8px 6px;
+      border-bottom: 0.5px solid var(--border-light);
+      white-space: nowrap;
+    }
+    .rubros-track-table th:first-child { text-align: left; }
+    .rubros-track-table td {
+      padding: 6px;
+      border-bottom: 0.5px solid var(--border-light);
+      text-align: center;
+      color: var(--text-primary);
+    }
+    .rubros-track-table td:first-child {
+      text-align: left;
+      font-weight: 500;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .rubros-track-table tr:last-child td { border-bottom: none; }
+    .rubros-track-table .total-row td {
+      font-weight: 600;
+      background: var(--bg-secondary);
+      border-top: 0.5px solid var(--border-medium);
+    }
+    .rubros-track-table input[type=number] {
+      background: transparent;
+      border: 0.5px solid var(--border-medium);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-family: var(--font);
+      font-size: 13px;
+      padding: 4px 2px;
+      text-align: center;
+      width: 52px;
+    }
+    .rubros-track-table input[type=number]:focus { outline: none; border-color: #378ADD; }
+    .total-cell {
+      font-weight: 600;
+      color: var(--text-info);
+    }
+
+    .insights-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .insight-card {
+      background: var(--bg-secondary);
+      border: 0.5px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: 14px;
+    }
+    .insight-card .ins-value {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .insight-card .ins-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+    .insight-card .ins-detail {
+      font-size: 12px;
+      color: var(--text-info);
+      margin-top: 6px;
+      font-weight: 500;
+    }
+
+    .panel-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .btn-action {
+      border: 0.5px solid var(--border-medium);
+      border-radius: var(--radius-md);
+      background: transparent;
+      color: var(--text-primary);
+      font-family: var(--font);
+      font-size: 12px;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-action:hover { background: var(--bg-secondary); }
+    .btn-action.btn-danger { color: var(--text-danger); border-color: rgba(240,149,149,0.3); }
+    .btn-action.btn-danger:hover { background: rgba(240,149,149,0.1); }
+    .btn-action.btn-primary { background: var(--bg-info); border-color: transparent; color: var(--text-info); font-weight: 600; }
+    .btn-action.btn-primary:hover { opacity: 0.9; }
+
+    @media (max-width: 640px) {
+      .track-metrics { grid-template-columns: repeat(2, 1fr); }
+      .insights-grid { grid-template-columns: repeat(2, 1fr); }
+      .rubros-grid { grid-template-columns: 1fr; }
+      .track-table input[type=number] { width: 40px; font-size: 12px; }
+      .rubro-track-row { grid-template-columns: 1fr; }
+      .rubro-track-row .rtc-vendor { justify-content: space-between; }
+    }
+
     /* Notas finales */
     .footer-note {
       font-size: 12px;
@@ -244,6 +550,24 @@
       text-align: center;
       margin-top: 1.5rem;
       line-height: 1.6;
+    }
+
+    @media (max-width: 768px) {
+      .app-layout { flex-direction: column; }
+      .sidebar {
+        width: 100%;
+        position: static;
+        margin-bottom: 0.5rem;
+      }
+      .sidebar-brand, .sidebar-sub { text-align: center; }
+      .tab-nav {
+        flex-direction: row;
+        background: var(--bg-primary);
+        border: 0.5px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        padding: 4px;
+      }
+      .tab-btn { flex: 1; text-align: center; }
     }
 
     @media (max-width: 640px) {
@@ -324,16 +648,23 @@
   </style>
 </head>
 <body>
-<div class="container">
+<div class="app-layout">
 
-  <!-- Header -->
-  <div class="header">
-    <div>
-      <div class="header-title">Calculadora de inversión Meta</div>
-      <div class="header-sub">Serrano & Bustamante — Estimaciones de rendimiento</div>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">Serrano & Bustamante</div>
+    <div class="sidebar-sub">Gestión publicitaria</div>
+    <div class="tab-nav">
+      <button class="tab-btn active" onclick="switchTab('calculadora')">Calculadora de inversión</button>
+      <button class="tab-btn" onclick="switchTab('control')">Control semanal</button>
     </div>
-    <div class="header-note">Las cifras son estimaciones objetivo, no garantías.</div>
-  </div>
+  </aside>
+
+  <!-- Contenido principal -->
+  <div class="container">
+
+  <!-- ══════ SECCIÓN 1: CALCULADORA ══════ -->
+  <div class="tab-section active" id="tab-calculadora">
 
   <!-- Presupuesto -->
   <div class="card">
@@ -393,7 +724,96 @@
     Actualiza el CPL con tus datos reales para proyecciones más precisas.
   </p>
 
-</div>
+  </div><!-- /tab-calculadora -->
+
+  <!-- ══════ SECCIÓN 2: CONTROL SEMANAL ══════ -->
+  <div class="tab-section" id="tab-control">
+
+  <!-- Selector de semana -->
+  <div class="card">
+    <div class="section-label">Semana</div>
+    <div class="week-selector">
+      <button class="week-nav-btn" onclick="changeWeek(-1)">&larr;</button>
+      <label>Desde</label>
+      <input type="date" id="weekStart" onchange="onWeekChange()">
+      <label>hasta</label>
+      <input type="date" id="weekEnd" readonly>
+      <button class="week-nav-btn" onclick="changeWeek(1)">&rarr;</button>
+    </div>
+  </div>
+
+  <!-- Control diario -->
+  <div class="card">
+    <div class="section-label">Control diario</div>
+    <div class="day-selector" id="daySelector"></div>
+    <div class="table-wrap">
+      <table class="track-table">
+        <thead>
+          <tr>
+            <th>Vendedora</th>
+            <th>Prospectos</th>
+            <th>Instagram</th>
+            <th>Showroom</th>
+            <th>Respondidos</th>
+            <th>Interés alto</th>
+            <th>Citas</th>
+            <th>Cierres</th>
+          </tr>
+        </thead>
+        <tbody id="dailyTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Prospectos por rubro por vendedora -->
+  <div class="card">
+    <div class="section-label">Prospectos por rubro</div>
+    <div class="table-wrap">
+      <table class="rubros-track-table">
+        <thead id="rubrosHead"></thead>
+        <tbody id="rubrosTrack"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Resumen semanal -->
+  <div class="card">
+    <div class="section-label">Resumen semanal</div>
+    <div class="table-wrap">
+      <table class="track-table">
+        <thead>
+          <tr>
+            <th>Día</th>
+            <th>Prospectos</th>
+            <th>Instagram</th>
+            <th>Showroom</th>
+            <th>Respondidos</th>
+            <th>Interés alto</th>
+            <th>Citas</th>
+            <th>Cierres</th>
+          </tr>
+        </thead>
+        <tbody id="weeklyTable"></tbody>
+      </table>
+    </div>
+    <div class="track-metrics" id="trackMetrics"></div>
+  </div>
+
+  <!-- Métricas de la semana -->
+  <div class="card">
+    <div class="section-label">Métricas de la semana</div>
+    <div class="insights-grid" id="weekInsights"></div>
+  </div>
+
+  <!-- Acciones -->
+  <div class="panel-actions">
+    <button class="btn-action btn-danger" onclick="clearWeekData()">Limpiar semana</button>
+  </div>
+
+  </div><!-- /tab-control -->
+
+  </div><!-- /container -->
+</div><!-- /app-layout -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
@@ -585,6 +1005,333 @@
   }
 
   render();
+
+  /* ══════════════════════════════════════
+     Navegación por tabs
+     ══════════════════════════════════════ */
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    event.currentTarget.classList.add('active');
+    if (tab === 'control') renderPanel();
+    if (tab === 'calculadora') renderChart();
+  }
+
+  /* ══════════════════════════════════════
+     Panel de Seguimiento Semanal
+     ══════════════════════════════════════ */
+
+  const TRACK_COLS = ['prospectos','instagram','showroom','respondidos','interes','citas','cierres'];
+  const VENDORS = ['Sabrina','Tahiruma','Paola'];
+  const RUBROS_TRACK = ['Diseño de Interiores','Iluminación','Papel Tapiz','Domótica','Mobiliario','Sonido','Propiedades','Otros'];
+  const DAY_NAMES = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+
+  let currentWeekStart = getMonday(new Date());
+  let selectedDay = 0; // 0-6 (Lun-Dom)
+
+  function getMonday(d) {
+    const date = new Date(d);
+    const day = date.getDay();
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+    date.setDate(diff);
+    date.setHours(0,0,0,0);
+    return date;
+  }
+
+  function weekKey(date) {
+    return date.toISOString().slice(0, 10);
+  }
+
+  function dayKey(dayIndex) {
+    const d = new Date(currentWeekStart.getTime() + dayIndex * 86400000);
+    return d.toISOString().slice(0, 10);
+  }
+
+  function initEmptyDay() {
+    const vendors = {};
+    VENDORS.forEach(v => {
+      vendors[v] = {};
+      TRACK_COLS.forEach(c => vendors[v][c] = 0);
+    });
+    return vendors;
+  }
+
+  function getWeekData() {
+    const key = 'track_' + weekKey(currentWeekStart);
+    const saved = localStorage.getItem(key);
+    if (saved) return JSON.parse(saved);
+    const days = {};
+    for (let i = 0; i < 7; i++) {
+      days[dayKey(i)] = initEmptyDay();
+    }
+    const rubros = {};
+    RUBROS_TRACK.forEach(r => {
+      rubros[r] = {};
+      VENDORS.forEach(v => rubros[r][v] = 0);
+    });
+    return { days, rubros };
+  }
+
+  function saveWeekData(data) {
+    const key = 'track_' + weekKey(currentWeekStart);
+    localStorage.setItem(key, JSON.stringify(data));
+  }
+
+  function dayHasData(data, dayIdx) {
+    const dk = dayKey(dayIdx);
+    const dayData = data.days[dk];
+    if (!dayData) return false;
+    return VENDORS.some(v => dayData[v] && TRACK_COLS.some(c => (dayData[v][c] || 0) > 0));
+  }
+
+  function changeWeek(dir) {
+    currentWeekStart = new Date(currentWeekStart.getTime() + dir * 7 * 86400000);
+    selectedDay = 0;
+    renderPanel();
+  }
+
+  function onWeekChange() {
+    const val = document.getElementById('weekStart').value;
+    if (val) {
+      currentWeekStart = getMonday(new Date(val + 'T12:00:00'));
+      selectedDay = 0;
+      renderPanel();
+    }
+  }
+
+  function selectDay(i) {
+    selectedDay = i;
+    renderPanel();
+  }
+
+  function formatDateShort(date) {
+    return date.toLocaleDateString('es', { day: 'numeric', month: 'short' });
+  }
+
+  function renderPanel() {
+    const data = getWeekData();
+    const endDate = new Date(currentWeekStart.getTime() + 6 * 86400000);
+
+    document.getElementById('weekStart').value = weekKey(currentWeekStart);
+    document.getElementById('weekEnd').value = weekKey(endDate);
+
+    // ── Selector de días ──
+    let daysHtml = '';
+    for (let i = 0; i < 7; i++) {
+      const dayDate = new Date(currentWeekStart.getTime() + i * 86400000);
+      const hasData = dayHasData(data, i);
+      const isActive = i === selectedDay;
+      daysHtml += `<button class="day-btn${isActive ? ' active' : ''}${hasData && !isActive ? ' has-data' : ''}" onclick="selectDay(${i})">
+        <span class="day-name">${DAY_NAMES[i]}</span>
+        <span class="day-date">${formatDateShort(dayDate)}</span>
+      </button>`;
+    }
+    document.getElementById('daySelector').innerHTML = daysHtml;
+
+    // ── Tabla diaria por vendedora ──
+    const dk = dayKey(selectedDay);
+    if (!data.days[dk]) data.days[dk] = initEmptyDay();
+    const dayData = data.days[dk];
+
+    const dayTotals = {};
+    TRACK_COLS.forEach(c => dayTotals[c] = 0);
+
+    let dailyHtml = '';
+    VENDORS.forEach(vendor => {
+      const vd = dayData[vendor] || {};
+      dailyHtml += `<tr><td style="font-weight:600">${vendor}</td>`;
+      TRACK_COLS.forEach(col => {
+        const val = vd[col] || 0;
+        dayTotals[col] += val;
+        dailyHtml += `<td><input type="number" value="${val}" min="0" onchange="updateDayTrack('${vendor}','${col}',this.value)"></td>`;
+      });
+      dailyHtml += '</tr>';
+    });
+    dailyHtml += `<tr class="total-row"><td>Total del día</td>`;
+    TRACK_COLS.forEach(col => { dailyHtml += `<td>${dayTotals[col]}</td>`; });
+    dailyHtml += '</tr>';
+    document.getElementById('dailyTable').innerHTML = dailyHtml;
+
+    // ── Resumen semanal ──
+    const weekTotals = {};
+    TRACK_COLS.forEach(c => weekTotals[c] = 0);
+
+    let weeklyHtml = '';
+    for (let i = 0; i < 7; i++) {
+      const dki = dayKey(i);
+      const dd = data.days[dki] || {};
+      const dayDate = new Date(currentWeekStart.getTime() + i * 86400000);
+      const label = DAY_NAMES[i] + ' ' + formatDateShort(dayDate);
+      const rowTotals = {};
+      TRACK_COLS.forEach(c => {
+        rowTotals[c] = 0;
+        VENDORS.forEach(v => { rowTotals[c] += (dd[v] && dd[v][c]) || 0; });
+        weekTotals[c] += rowTotals[c];
+      });
+      const hasAny = TRACK_COLS.some(c => rowTotals[c] > 0);
+      weeklyHtml += `<tr class="week-summary-row" style="cursor:pointer;${i === selectedDay ? 'background:rgba(55,138,221,0.08)' : ''}" onclick="selectDay(${i})">`;
+      weeklyHtml += `<td style="font-weight:500">${label}</td>`;
+      TRACK_COLS.forEach(col => {
+        const v = rowTotals[col];
+        weeklyHtml += `<td style="${v > 0 ? 'font-weight:500' : 'color:var(--text-secondary)'}">${v}</td>`;
+      });
+      weeklyHtml += '</tr>';
+    }
+    weeklyHtml += `<tr class="total-row"><td>Total semana</td>`;
+    TRACK_COLS.forEach(col => { weeklyHtml += `<td>${weekTotals[col]}</td>`; });
+    weeklyHtml += '</tr>';
+    document.getElementById('weeklyTable').innerHTML = weeklyHtml;
+
+    // ── Métricas resumen semanal ──
+    document.getElementById('trackMetrics').innerHTML = `
+      <div class="track-metric-card"><div class="tm-value">${weekTotals.prospectos}</div><div class="tm-label">Prospectos totales</div></div>
+      <div class="track-metric-card"><div class="tm-value">${weekTotals.respondidos}</div><div class="tm-label">Respondidos</div></div>
+      <div class="track-metric-card"><div class="tm-value">${weekTotals.citas}</div><div class="tm-label">Citas</div></div>
+      <div class="track-metric-card"><div class="tm-value">${weekTotals.cierres}</div><div class="tm-label">Cierres</div></div>
+    `;
+
+    // ── Métricas / Insights de la semana ──
+    renderInsights(data, weekTotals);
+
+    // ── Tabla de rubros por vendedora ──
+    document.getElementById('rubrosHead').innerHTML = `
+      <tr>
+        <th>Rubro</th>
+        ${VENDORS.map(v => `<th>${v}</th>`).join('')}
+        <th>Total</th>
+      </tr>`;
+
+    let rubrosHtml = '';
+    RUBROS_TRACK.forEach(rubro => {
+      const rd = data.rubros[rubro] || {};
+      let rubroTotal = 0;
+      rubrosHtml += `<tr><td>${rubro}</td>`;
+      VENDORS.forEach(v => {
+        const val = rd[v] || 0;
+        rubroTotal += val;
+        rubrosHtml += `<td><input type="number" value="${val}" min="0" onchange="updateRubroTrack('${rubro}','${v}',this.value)"></td>`;
+      });
+      rubrosHtml += `<td class="total-cell">${rubroTotal}</td></tr>`;
+    });
+    document.getElementById('rubrosTrack').innerHTML = rubrosHtml;
+  }
+
+  function renderInsights(data, weekTotals) {
+    // Rubro más popular
+    let topRubro = '—', topRubroVal = 0;
+    RUBROS_TRACK.forEach(r => {
+      const rd = data.rubros[r] || {};
+      const total = VENDORS.reduce((s, v) => s + (rd[v] || 0), 0);
+      if (total > topRubroVal) { topRubroVal = total; topRubro = r; }
+    });
+
+    // Día con más prospectos
+    let bestDay = '—', bestDayVal = 0;
+    for (let i = 0; i < 7; i++) {
+      const dki = dayKey(i);
+      const dd = data.days[dki] || {};
+      const total = VENDORS.reduce((s, v) => s + ((dd[v] && dd[v].prospectos) || 0), 0);
+      if (total > bestDayVal) {
+        bestDayVal = total;
+        const dayDate = new Date(currentWeekStart.getTime() + i * 86400000);
+        bestDay = DAY_NAMES[i] + ' ' + formatDateShort(dayDate);
+      }
+    }
+
+    // Vendedora con más prospectos en la semana
+    let topVendor = '—', topVendorVal = 0;
+    VENDORS.forEach(v => {
+      let total = 0;
+      for (let i = 0; i < 7; i++) {
+        const dki = dayKey(i);
+        const dd = data.days[dki] || {};
+        total += (dd[v] && dd[v].prospectos) || 0;
+      }
+      if (total > topVendorVal) { topVendorVal = total; topVendor = v; }
+    });
+
+    // Tasa de respuesta
+    const tasaResp = weekTotals.prospectos > 0
+      ? Math.round((weekTotals.respondidos / weekTotals.prospectos) * 100) : 0;
+
+    // Tasa de cierre (cierres / citas)
+    const tasaCierre = weekTotals.citas > 0
+      ? Math.round((weekTotals.cierres / weekTotals.citas) * 100) : 0;
+
+    // Canal principal (IG vs Showroom)
+    const pctIG = weekTotals.prospectos > 0
+      ? Math.round((weekTotals.instagram / weekTotals.prospectos) * 100) : 0;
+
+    document.getElementById('weekInsights').innerHTML = `
+      <div class="insight-card">
+        <div class="ins-value">${topRubro}</div>
+        <div class="ins-label">Rubro más solicitado</div>
+        <div class="ins-detail">${topRubroVal} prospectos</div>
+      </div>
+      <div class="insight-card">
+        <div class="ins-value">${bestDay}</div>
+        <div class="ins-label">Día con más prospectos</div>
+        <div class="ins-detail">${bestDayVal} prospectos</div>
+      </div>
+      <div class="insight-card">
+        <div class="ins-value">${topVendor}</div>
+        <div class="ins-label">Vendedora top de la semana</div>
+        <div class="ins-detail">${topVendorVal} prospectos</div>
+      </div>
+      <div class="insight-card">
+        <div class="ins-value">${weekTotals.citas}</div>
+        <div class="ins-label">Citas en la semana</div>
+        <div class="ins-detail">${weekTotals.cierres} cierres</div>
+      </div>
+      <div class="insight-card">
+        <div class="ins-value">${tasaResp}%</div>
+        <div class="ins-label">Tasa de respuesta</div>
+        <div class="ins-detail">${weekTotals.respondidos} de ${weekTotals.prospectos}</div>
+      </div>
+      <div class="insight-card">
+        <div class="ins-value">${tasaCierre}%</div>
+        <div class="ins-label">Tasa de cierre</div>
+        <div class="ins-detail">${pctIG}% viene de Instagram</div>
+      </div>
+    `;
+  }
+
+  function updateDayTrack(vendor, col, val) {
+    const data = getWeekData();
+    const dk = dayKey(selectedDay);
+    if (!data.days[dk]) data.days[dk] = initEmptyDay();
+    if (!data.days[dk][vendor]) { data.days[dk][vendor] = {}; TRACK_COLS.forEach(c => data.days[dk][vendor][c] = 0); }
+    data.days[dk][vendor][col] = parseInt(val) || 0;
+    saveWeekData(data);
+    renderPanel();
+  }
+
+  function updateRubroTrack(rubro, vendor, val) {
+    const data = getWeekData();
+    if (!data.rubros[rubro]) { data.rubros[rubro] = {}; VENDORS.forEach(v => data.rubros[rubro][v] = 0); }
+    data.rubros[rubro][vendor] = parseInt(val) || 0;
+    saveWeekData(data);
+    renderPanel();
+  }
+
+  function clearWeekData() {
+    if (confirm('¿Limpiar todos los datos de esta semana?')) {
+      const key = 'track_' + weekKey(currentWeekStart);
+      localStorage.removeItem(key);
+      renderPanel();
+    }
+  }
+
+  // Auto-seleccionar el día de hoy si está en la semana actual
+  (function() {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const diff = Math.floor((today - currentWeekStart) / 86400000);
+    if (diff >= 0 && diff < 7) selectedDay = diff;
+    renderPanel();
+  })();
 </script>
 </body>
 </html>
