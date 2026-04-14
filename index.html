@@ -31,9 +31,102 @@
     .main { flex: 1; min-width: 0; }
 
     /* Sidebar */
-    .sidebar { width: 200px; flex-shrink: 0; position: sticky; top: 2rem; align-self: flex-start; background: var(--bg-sidebar); border: 0.5px solid var(--border-light); border-radius: var(--radius-lg); padding: 1.25rem .75rem; }
-    .sb-brand { font-size: 15px; font-weight: 600; padding: 0 8px; margin-bottom: 4px; }
-    .sb-sub { font-size: 11px; color: var(--text-secondary); padding: 0 8px 12px; border-bottom: 0.5px solid var(--border-light); margin-bottom: 12px; }
+    .sidebar { width: 220px; flex-shrink: 0; position: sticky; top: 2rem; align-self: flex-start; background: #ffffff; border: 0.5px solid var(--border-light); border-radius: var(--radius-lg); padding: 1.5rem 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .sb-logo-wrap { padding: 6px 12px 18px; border-bottom: 0.5px solid var(--border-light); margin-bottom: 16px; display: flex; justify-content: center; }
+    .sb-logo { display: block; width: 100%; max-width: 130px; height: auto; }
+
+    /* Banner hero */
+    .hero {
+      position: relative;
+      background: linear-gradient(120deg, #0f1419 0%, #1a2332 40%, #0C447C 100%);
+      border-radius: 16px;
+      padding: 2.5rem 2.5rem;
+      margin-bottom: 1.25rem;
+      overflow: hidden;
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06), 0 20px 40px -20px rgba(12,68,124,0.4);
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -30%;
+      right: -5%;
+      width: 420px;
+      height: 420px;
+      background: radial-gradient(circle, rgba(133,183,235,0.22) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: -50%;
+      left: 20%;
+      width: 320px;
+      height: 320px;
+      background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .hero-inner {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+    .hero-logo {
+      width: 96px;
+      height: 96px;
+      background: #ffffff;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      flex-shrink: 0;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.08);
+    }
+    .hero-logo img { width: 100%; height: auto; display: block; }
+    .hero-text { flex: 1; min-width: 240px; }
+    .hero-eyebrow {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: #85B7EB;
+      margin-bottom: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .hero-eyebrow::before {
+      content: '';
+      width: 24px;
+      height: 1px;
+      background: #85B7EB;
+    }
+    .hero-title {
+      font-size: 26px;
+      font-weight: 600;
+      color: #ffffff;
+      letter-spacing: -0.015em;
+      line-height: 1.2;
+    }
+    .hero-subtitle {
+      font-size: 13px;
+      color: rgba(255,255,255,0.65);
+      margin-top: 10px;
+      line-height: 1.55;
+      max-width: 540px;
+    }
+    @media (max-width: 640px) {
+      .hero { padding: 1.75rem 1.25rem; border-radius: 12px; }
+      .hero-inner { gap: 1.25rem; }
+      .hero-logo { width: 68px; height: 68px; padding: 10px; border-radius: 12px; }
+      .hero-title { font-size: 20px; }
+      .hero-subtitle { font-size: 12px; }
+    }
+    .sb-brand { font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; text-align: center; color: var(--text-primary); padding: 0 8px; margin-bottom: 2px; }
+    .sb-sub { display: none; }
     .sb-nav { display: flex; flex-direction: column; gap: 4px; }
     .sb-btn { background: transparent; border: none; border-radius: var(--radius-md); color: var(--text-secondary); font-family: var(--font); font-size: 13px; font-weight: 500; padding: 10px 12px; cursor: pointer; text-align: left; transition: all .2s; }
     .sb-btn:hover { color: var(--text-primary); background: var(--bg-primary); }
@@ -144,8 +237,7 @@
 <div class="app">
 
   <aside class="sidebar">
-    <div class="sb-brand">Serrano & Bustamante</div>
-    <div class="sb-sub">Gestión publicitaria</div>
+    <div class="sb-logo-wrap"><img src="images.png" alt="Serrano & Bustamante" class="sb-logo"></div>
     <div class="sb-nav">
       <button class="sb-btn active" onclick="switchTab('calc',this)">Calculadora</button>
       <button class="sb-btn" onclick="switchTab('ctrl',this)">Control de leads</button>
@@ -153,6 +245,18 @@
   </aside>
 
   <div class="main">
+
+    <!-- Banner hero -->
+    <div class="hero">
+      <div class="hero-inner">
+        <div class="hero-logo"><img src="images.png" alt="Serrano & Bustamante"></div>
+        <div class="hero-text">
+          <div class="hero-eyebrow">Serrano &amp; Bustamante</div>
+          <div class="hero-title">Plataforma de gestión publicitaria</div>
+          <div class="hero-subtitle">Simula inversiones en Meta Ads y lleva el control diario de leads por vendedora, rubro y semana.</div>
+        </div>
+      </div>
+    </div>
 
     <!-- ═══ TAB 1: CALCULADORA ═══ -->
     <div class="tab active" id="tab-calc">
@@ -366,8 +470,8 @@ async function apiCall(body) {
     }
     return json;
   } catch (e) {
-    console.error('API fetch:', e);
-    setSyncStatus('❌ ' + e.message, '#c0392b');
+    // Error de red (ej: archivo local sin backend) — silencioso
+    console.warn('API offline:', e.message);
     return null;
   }
 }
