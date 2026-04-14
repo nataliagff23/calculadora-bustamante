@@ -502,18 +502,23 @@ function loadDay() {
   selectedWeekStart = getWeekStart(currentDate);
   selectedMonth = currentDate.slice(0, 7);
 
-  // Siempre renderizar inmediatamente con datos locales (vacíos si no hay)
+  // Renderizar inmediatamente con caché local (fast paint)
   renderDayUI(getDayData(currentDate));
 
-  // Si no hay datos locales, intentar cargar de Airtable en background
-  if (!localStorage.getItem(dayKey(currentDate))) {
-    const dateAtLoad = currentDate;
-    loadFromAirtable(currentDate).then(data => {
-      if (dateAtLoad !== currentDate || !data) return;
+  // Siempre sincronizar con Airtable (fuente de verdad)
+  const dateAtLoad = currentDate;
+  loadFromAirtable(currentDate).then(data => {
+    if (dateAtLoad !== currentDate) return; // el usuario cambió de día
+    if (data) {
+      // Airtable tiene datos: usar esos
       saveDayData(dateAtLoad, data);
       renderDayUI(data);
-    }).catch(() => {});
-  }
+    } else {
+      // Airtable vacío: limpiar caché local y mostrar en blanco
+      localStorage.removeItem(dayKey(dateAtLoad));
+      renderDayUI(getDayData(dateAtLoad));
+    }
+  }).catch(() => {});
 }
 
 function renderDayUI(data) {
