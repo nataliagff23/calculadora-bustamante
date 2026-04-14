@@ -1,199 +1,279 @@
-# Calculadora de Inversión Meta — Serrano & Bustamante
+# Plataforma Serrano & Bustamante
 
 ## Descripción general
 
-Plataforma web de una sola página (SPA) diseñada para estimar el rendimiento de campañas publicitarias en Meta (Facebook/Instagram) para la empresa Serrano & Bustamante. Permite a los usuarios simular distintos escenarios de inversión y visualizar los resultados esperados en tiempo real.
+Plataforma web con dos secciones:
+1. **Calculadora de inversión Meta** — Estima el rendimiento de campañas publicitarias en Meta
+2. **Control de leads** — Registro diario de prospectos por vendedora y rubro, con métricas semanales y mensuales
 
-No requiere backend ni base de datos. Todo el cálculo se ejecuta en el navegador del cliente.
+Frontend: SPA en un único archivo `index.html` servido como sitio estático desde Vercel.
+Backend: Vercel serverless functions en `/api/` para proxy a Airtable.
 
 ---
 
 ## Stack tecnológico
 
-- **HTML5** — Estructura semántica del documento
-- **CSS3** — Estilos con variables CSS (custom properties), media queries para responsive y soporte nativo de modo oscuro via `prefers-color-scheme`
-- **JavaScript vanilla** — Lógica de cálculo, renderizado dinámico del DOM y manejo de eventos
-- **Chart.js 4.4.1** — Librería externa cargada por CDN para el gráfico de barras
+- **HTML5 / CSS3 / JavaScript vanilla** — todo en `index.html`
+- **Chart.js 4.4.1** — gráfico de barras (CDN)
+- **Chart.js datalabels plugin 2.2.0** — etiquetas sobre barras (CDN)
+- **Vercel serverless functions** (`/api/airtable.js`) — proxy a Airtable usando `fetch` nativo de Node
+- **Airtable** — base de datos (via REST API)
+
+No se usa npm, bundler ni framework. Las dependencias del cliente se cargan por CDN.
 
 ---
 
-## Arquitectura del archivo
+## Despliegue
 
-Todo está contenido en un único archivo `index.html` con tres secciones embebidas:
+- **GitHub:** `nataliagff23/calculadora-bustamante` (rama `main`)
+- **Vercel:** auto-deploy desde `main`. La carpeta `/api/` se despliega automáticamente como serverless functions
+- **Variables de entorno en Vercel:**
+  - `AIRTABLE_KEY` — Personal Access Token de Airtable (scopes: `data.records:read`, `data.records:write`, con acceso al base específico)
+  - `AIRTABLE_BASE` — `appC0laa43S7rNjhC`
 
-1. **`<style>`** — Sistema de diseño completo con variables CSS, estilos de componentes y media queries
-2. **`<body>`** — Estructura HTML con contenedores para cada sección de la interfaz
-3. **`<script>`** — Lógica de la aplicación, datos por defecto y funciones de renderizado
-
----
-
-## Modelo de datos
-
-### Rubros (array `RUBROS_DEFAULT`)
-
-Cada rubro representa una línea de negocio o campaña publicitaria con los siguientes campos:
-
-| Campo  | Tipo   | Descripción                                           |
-|--------|--------|-------------------------------------------------------|
-| `name` | string | Nombre del rubro (ej: "Papel Tapiz — DM")            |
-| `obj`  | string | Tipo de objetivo de la campaña                        |
-| `pct`  | number | Porcentaje del presupuesto asignado (0-100)           |
-| `cpl`  | number | Costo por lead/resultado en dólares                   |
-| `type` | string | Categoría visual: `conv`, `lead` o `ig`               |
-
-### Rubros configurados por defecto (7 rubros)
-
-1. **Papel Tapiz — DM** (15%, CPL $0.60) → Conversaciones por mensaje directo
-2. **Papel Tapiz — Formulario** (15%, CPL $1.90) → Leads por formulario
-3. **Iluminación — Formulario** (15%, CPL $1.90) → Leads por formulario
-4. **Mobiliario — Formulario** (15%, CPL $1.90) → Leads por formulario
-5. **Diseño / Remodelación** (15%, CPL $2.50) → Leads por formulario
-6. **Domótica — Formulario** (15%, CPL $1.90) → Leads por formulario
-7. **Seguidores en IG** (10%, CPL $0.05) → Crecimiento de seguidores
-
-### Variables globales
-
-- `budget` — Presupuesto mensual en dólares (default: 1000)
-- `rubros` — Array mutable con la configuración actual de cada rubro
-- `chart` — Instancia activa de Chart.js (se destruye y recrea en cada render)
+Después de cambiar una env var, hay que **redeploy manual** desde Vercel para que tome efecto.
 
 ---
 
-## Fórmulas de cálculo
+## Estructura de archivos
 
 ```
-Inversión por rubro = budget × (pct / 100)
-Resultados estimados = Math.round(Inversión por rubro / cpl)
+/
+├── index.html          # SPA completa
+├── api/
+│   └── airtable.js     # Serverless proxy a Airtable
+├── apps-script.js      # (legado, no se usa) — Google Apps Script anterior
+└── CLAUDE.md
 ```
 
-### Métricas agregadas
+---
 
-- **Conversaciones (DM)** = resultados del rubro índice 0
-- **Leads formulario** = suma de resultados de rubros índices 1 a 5
-- **Seguidores IG** = resultados del rubro índice 6
-- **Total resultados** = Conversaciones + Leads (no incluye seguidores)
+## Sección 1: Calculadora de inversión
+
+### Modelo de datos
+
+Array `RUBROS_DEFAULT` con 7 rubros. Cada rubro tiene:
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `name` | string | Nombre del rubro |
+| `obj` | string | Tipo de objetivo |
+| `pct` | number | % del presupuesto (0-100) |
+| `cpl` | number | Costo por lead en USD |
+| `type` | string | `conv`, `lead` o `ig` |
+
+**Rubros configurados (7):**
+1. Papel Tapiz — DM (15%, $0.60, conv)
+2. Papel Tapiz — Formulario (15%, $1.90, lead)
+3. Iluminación — Formulario (15%, $1.90, lead)
+4. Mobiliario — Formulario (15%, $1.90, lead)
+5. Diseño / Remodelación (15%, $2.50, lead)
+6. Domótica — Formulario (15%, $1.90, lead)
+7. Seguidores en IG (10%, $0.05, ig)
+
+### Fórmulas
+
+```
+inversión por rubro = budget × (pct / 100)
+resultados estimados = round(inversión / cpl)
+```
+
+**Métricas agregadas:**
+- Conversaciones (DM) = resultados del rubro 0
+- Leads formulario = suma rubros 1 a 5
+- Seguidores IG = rubro 6
+- Total = conversaciones + leads (excluye seguidores)
+
+### UI
+
+- **Selector de presupuesto:** botones preset ($600, $1000, $1500), slider ($200-$5000) e input numérico ($200-$50000)
+- **Tabla editable:** por rubro con % inversión y CPL ajustables en tiempo real
+- **5 tarjetas de métricas** y **gráfico de barras** con datalabels y tooltip
 
 ---
 
-## Componentes de la interfaz
+## Sección 2: Control de leads
 
-### 1. Header
+### Modelo de datos
 
-- Título: "Calculadora de inversión Meta"
-- Subtítulo: "Serrano & Bustamante — Estimaciones de rendimiento"
-- Nota de disclaimer en esquina superior derecha
+Los datos se almacenan **por día**. Cada día tiene:
 
-### 2. Selector de presupuesto
+```js
+{
+  vendors: {
+    Sabrina:  { prospectos, instagram, showroom, respondidos, interes, citas, cierres },
+    Tahiruma: { ... },
+    Paola:    { ... }
+  },
+  rubros: {
+    "Diseño de Interiores": { Sabrina, Tahiruma, Paola },
+    "Iluminación": { ... },
+    "Papel Tapiz": { ... },
+    "Domótica": { ... },
+    "Mobiliario": { ... },
+    "Sonido": { ... },
+    "Propiedades": { ... },
+    "Otros": { ... }
+  }
+}
+```
 
-- **Botones preset**: $600, $1,000, $1,500 — aplican el presupuesto y resetean los rubros a valores por defecto
-- **Botón "Personalizado"**: se activa automáticamente al usar el slider o el input manual
-- **Slider (range)**: rango de $200 a $5,000 en pasos de $50
-- **Input numérico**: permite valores de $200 a $50,000 (el slider se limita a $5,000 pero el input acepta valores mayores)
+**Vendedoras:** `['Sabrina', 'Tahiruma', 'Paola']`
+**Columnas por vendedora:** `['prospectos', 'instagram', 'showroom', 'respondidos', 'interes', 'citas', 'cierres']`
+**Rubros:** `['Diseño de Interiores', 'Iluminación', 'Papel Tapiz', 'Domótica', 'Mobiliario', 'Sonido', 'Propiedades', 'Otros']`
 
-### 3. Tabla de distribución por rubro
+### Persistencia
 
-Cada fila muestra:
-- Nombre del rubro
-- Badge de objetivo (Conversación / Lead / Seguidor) con colores diferenciados
-- **% de inversión** — campo editable que redistribuye el presupuesto
-- **Inversión calculada** — monto en dólares (solo lectura)
-- **CPL aproximado** — campo editable para ajustar el costo por resultado
-- **Resultados estimados** — cantidad calculada automáticamente (solo lectura)
+**Airtable es la fuente de verdad.** localStorage se usa como caché local para render rápido.
 
-Fila de totales al final con suma de porcentajes, inversión y resultados.
+- Al cargar un día: pinta el caché local inmediatamente, luego consulta Airtable. Si Airtable tiene datos, los usa. Si está vacío, limpia el caché local.
+- Al escribir: guarda en localStorage al instante, y después de 2 segundos de debounce envía todo el día a Airtable.
+- `clearDay()` borra tanto el caché local como todos los registros del día en Airtable.
 
-**Validación**: si los porcentajes no suman 100%, aparece una advertencia en rojo debajo de la tabla.
+### UI
 
-### 4. Tarjetas de métricas
+- **Selector de fecha** con flechas y `<input type="date">`
+- **Tabla de vendedoras** — filas Sabrina/Tahiruma/Paola, columnas editables, fila TOTAL automática
+- **Tabla de rubros** — filas por rubro, columnas Sabrina/Tahiruma/Paola, columna TOTAL por fila
+- **Resumen semanal** — 9 tarjetas con selector de semana (flechas izq/der). Incluye totales + rubro top + vendedora top (basada en citas+cierres) + tasa de respuesta
+- **Resumen mensual** — 9 tarjetas con selector de mes (flechas izq/der). Similar al semanal + tasa de cierre
+- **Botón "Limpiar día actual"** — borra local y Airtable
 
-Cinco tarjetas en fila horizontal (responsive a 2 columnas en móvil):
-- Inversión mensual (presupuesto total)
-- Conversaciones por DM
-- Leads por formulario (5 rubros)
-- Seguidores IG
-- Total resultados (conversaciones + leads)
+### Funciones clave
 
-### 5. Gráfico de barras
+| Función | Descripción |
+|---|---|
+| `loadDay()` | Cambia de día, carga de localStorage + sync con Airtable |
+| `renderDayUI(data)` | Re-renderiza los inputs (solo al cambiar de día) |
+| `onVendorInput(el)` | Guarda input de vendedora, actualiza totales sin re-renderizar |
+| `onRubroInput(el)` | Guarda input de rubro, actualiza total de fila |
+| `scheduleSave(date)` | Debounce de 2s y llama `saveToAirtable` |
+| `saveToAirtable(date)` | Lista registros del día, hace upsert de 3 vendedoras + 8 rubros |
+| `loadFromAirtable(date)` | Consulta Airtable y devuelve estructura `{vendors, rubros}` |
+| `aggregateDays(dates)` | Suma totales + calcula top rubro/vendedora/tasas |
+| `renderSummaries()` | Pinta resumen semanal y mensual |
+| `moveDay(dir)` / `moveWeek(dir)` / `moveMonth(dir)` | Navegación |
 
-- Renderizado con Chart.js
-- Una barra por rubro con colores diferenciados
-- Leyenda personalizada con puntos de color sobre el gráfico
-- Tooltip al hacer hover mostrando cantidad de resultados
-- Eje X con nombres truncados a 20 caracteres
-- Eje Y comienza en cero
-- Se destruye y recrea en cada actualización para evitar memory leaks
+### Actualización parcial del DOM
+
+**Nunca se re-renderiza la tabla de inputs mientras el usuario escribe.** Los inputs usan `oninput` que llama a `onVendorInput` / `onRubroInput`. Estas funciones:
+1. Guardan en localStorage
+2. Disparan el debounce de Airtable
+3. Actualizan solo los totales (`.vt-*` y `.rt-*`) vía `textContent`
+4. Re-renderizan los resúmenes semanales/mensuales (que no contienen inputs)
+
+Esto evita el bug común donde el re-render destruye el input activo y se pierde el foco/cursor.
 
 ---
 
-## Funciones principales
+## Airtable
 
-| Función            | Descripción                                                        |
-|--------------------|--------------------------------------------------------------------|
-| `calcResults()`    | Calcula inversión y resultados para cada rubro                     |
-| `renderTable()`    | Genera el HTML de la tabla con datos actuales                      |
-| `renderMetrics()`  | Genera las tarjetas de métricas agregadas                          |
-| `renderChart()`    | Destruye el gráfico anterior y crea uno nuevo con datos actuales   |
-| `render()`         | Ejecuta las tres funciones de renderizado en secuencia             |
-| `updatePct(i,val)` | Actualiza el porcentaje del rubro `i` y re-renderiza               |
-| `updateCpl(i,val)` | Actualiza el CPL del rubro `i` y re-renderiza                     |
-| `setPreset(val)`   | Aplica un presupuesto preset, resetea rubros y actualiza la UI     |
-| `setCustomActive()`| Marca el botón "Personalizado" como activo                        |
-| `onSlider(val)`    | Maneja el cambio del slider de presupuesto                         |
-| `onInput(val)`     | Maneja el cambio del input numérico de presupuesto                 |
+### Base
+- **Nombre:** Bustamante
+- **ID:** `appC0laa43S7rNjhC`
+
+### Tabla `Vendedoras` (ID: `tblA9qwrSJTn63GYb`)
+
+| Columna | Tipo |
+|---|---|
+| Fecha | Date |
+| Vendedora | Single select (Sabrina, Tahiruma, Paola) |
+| Prospectos Totales | Number |
+| Instagram | Number |
+| Showroom | Number |
+| Respondidos | Number |
+| Interés Alto | Number |
+| Citas | Number |
+| Cierres | Number |
+
+### Tabla `Rubros` (ID: `tbltdJfwYgorPeR8L`)
+
+| Columna | Tipo |
+|---|---|
+| Fecha | Date |
+| Rubro | Single select (los 8 rubros) |
+| Sabrina | Number |
+| Tahiruma | Number |
+| Paola | Number |
+
+### Mapeo de nombres
+
+En el frontend, los nombres internos (lowercase) se mapean a los de Airtable en `FIELD_MAP_VENDOR`:
+
+```js
+{
+  prospectos: 'Prospectos Totales',
+  instagram: 'Instagram',
+  showroom: 'Showroom',
+  respondidos: 'Respondidos',
+  interes: 'Interés Alto',   // importante: con acento
+  citas: 'Citas',
+  cierres: 'Cierres'
+}
+```
+
+### Filtro por fecha
+
+Airtable almacena las fechas como datetime. Para filtrar por día se usa:
+```
+filterByFormula=DATESTR({Fecha})='2026-03-31'
+```
+
+Esto es crítico — `{Fecha}='2026-03-31'` NO funciona con campos Date de Airtable.
+
+### Typecast
+
+Los upserts usan `typecast: true` para que Airtable cree automáticamente las opciones de Single select si no existen (ej: agregar un nuevo rubro en el código).
+
+---
+
+## Serverless proxy (`/api/airtable.js`)
+
+Función Vercel que recibe POST con `{op, table, date?, recordId?, fields?}` y hace proxy a Airtable con la API key en env var.
+
+**Operaciones soportadas:**
+- `op: 'list'` — consulta por fecha con `DATESTR`
+- `op: 'upsert'` — POST (nuevo) o PATCH (existente), con `typecast: true`
+- `op: 'delete'` — DELETE por recordId
+
+**Razón del proxy:** la API key de Airtable no se expone al cliente. Queda solo en las env vars de Vercel.
 
 ---
 
 ## Sistema de diseño
 
-### Temas
+### Tema claro
 
-La plataforma soporta **modo claro y modo oscuro** automáticamente según la preferencia del sistema operativo del usuario (`prefers-color-scheme: dark`).
+Variables CSS principales:
+| Variable | Valor |
+|---|---|
+| `--bg-primary` | `#ffffff` |
+| `--bg-secondary` | `#f5f5f0` |
+| `--bg-sidebar` | `#eaeae5` |
+| `--bg-info` | `#d6e8fa` |
+| `--text-primary` | `#1a1a1a` |
+| `--text-secondary` | `#6b6b60` |
+| `--text-info` | `#0C447C` |
+| `--text-danger` | `#c0392b` |
 
-### Variables CSS principales
+### Layout
 
-| Variable           | Claro         | Oscuro         | Uso                        |
-|--------------------|---------------|----------------|----------------------------|
-| `--bg-primary`     | `#ffffff`     | `#1e1e1c`      | Fondo de cards             |
-| `--bg-secondary`   | `#f5f5f3`     | `#2a2a28`      | Fondo de página y totales  |
-| `--bg-info`        | `#E6F1FB`     | `#0C447C`      | Botones activos            |
-| `--text-primary`   | `#1a1a18`     | `#f0ede8`      | Texto principal            |
-| `--text-secondary` | `#6b6b66`     | `#9a9990`      | Texto secundario/labels    |
-| `--text-danger`    | `#A32D2D`     | `#F09595`      | Advertencias               |
+- **Sidebar izquierdo** (200px) con botones de tab: Calculadora / Control de leads
+- **Main content** (flex) con max-width 1100px
+- En móvil (<768px): sidebar se convierte en tabs horizontales arriba
 
-### Badges de objetivo
+### Indicador de sincronización
 
-| Tipo   | Clase        | Color claro              | Color oscuro              |
-|--------|-------------|--------------------------|---------------------------|
-| conv   | badge-conv  | fondo verde, texto verde | fondo verde oscuro        |
-| lead   | badge-lead  | fondo azul, texto azul   | fondo azul oscuro         |
-| ig     | badge-ig    | fondo ámbar, texto ámbar | fondo ámbar oscuro        |
-
-### Colores del gráfico
-
-Array fijo de 7 colores: `#1D9E75`, `#378ADD`, `#5DCAA5`, `#185FA5`, `#BA7517`, `#3B6D11`, `#EF9F27`
-
-### Responsive
-
-- **Desktop**: layout completo en una columna de 900px max-width
-- **Móvil (< 540px)**: header apilado verticalmente, métricas en grid de 2 columnas
-- **Tabla**: scroll horizontal cuando el contenido excede el ancho disponible
+`#syncStatus` muestra el estado de las operaciones con Airtable:
+- `⟳ Guardando...` (azul)
+- `✓ Guardado` (verde)
+- `❌ <mensaje>` (rojo) — muestra el error de Airtable si falla
 
 ---
 
-## Dependencias externas
+## Problemas conocidos resueltos
 
-| Recurso   | URL CDN                                                              | Versión |
-|-----------|----------------------------------------------------------------------|---------|
-| Chart.js  | `cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js`       | 4.4.1   |
-
-No hay otras dependencias. No se usa npm, bundler ni framework.
-
----
-
-## Notas técnicas
-
-- Toda la UI se re-renderiza completamente en cada cambio (approach de renderizado declarativo)
-- El gráfico Chart.js se destruye (`chart.destroy()`) antes de crear uno nuevo para evitar fugas de memoria
-- Los inputs de porcentaje aceptan 0-100, los de CPL aceptan desde 0.01
-- Si un CPL es 0 o negativo, se fuerza a 0.01 para evitar divisiones por cero
-- La fuente principal es Inter, con fallback a system-ui y sans-serif
+1. **Input perdía foco al escribir** — se arregló no re-renderizando las tablas de inputs durante `oninput`, solo los totales y resúmenes
+2. **Números concatenados como strings** (`"0" + "10" = "010"`) — forzar `Number()` al cargar de Airtable
+3. **`filterByFormula` con fechas** — usar `DATESTR({Fecha})` en lugar de `{Fecha}=`
+4. **CORS / POST redirects con Google Apps Script** — migrado a Airtable + proxy serverless de Vercel
+5. **API key expuesta** — movida a env var de Vercel con proxy en `/api/airtable.js`
