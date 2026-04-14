@@ -446,7 +446,7 @@ async function loadFromAirtable(dateStr) {
   vendorsList.records.forEach(r => {
     const v = r.fields.Vendedora;
     if (!data.vendors[v]) return;
-    VCOLS.forEach(c => { data.vendors[v][c] = r.fields[FIELD_MAP_VENDOR[c]] || 0; });
+    VCOLS.forEach(c => { data.vendors[v][c] = Number(r.fields[FIELD_MAP_VENDOR[c]]) || 0; });
     recordCache.vendors[cacheKey(dateStr, v)] = r.id;
   });
 
@@ -454,9 +454,9 @@ async function loadFromAirtable(dateStr) {
     rubrosList.records.forEach(r => {
       const name = r.fields.Rubro;
       if (!data.rubros[name]) return;
-      data.rubros[name].Sabrina = r.fields.Sabrina || 0;
-      data.rubros[name].Tahiruma = r.fields.Tahiruma || 0;
-      data.rubros[name].Paola = r.fields.Paola || 0;
+      data.rubros[name].Sabrina = Number(r.fields.Sabrina) || 0;
+      data.rubros[name].Tahiruma = Number(r.fields.Tahiruma) || 0;
+      data.rubros[name].Paola = Number(r.fields.Paola) || 0;
       recordCache.rubros[cacheKey(dateStr, name)] = r.id;
     });
   }
@@ -588,11 +588,34 @@ function onRubroInput(el) {
   renderSummaries();
 }
 
-function clearDay() {
-  if (confirm('¿Limpiar los datos de ' + currentDate + '?')) {
-    localStorage.removeItem(dayKey(currentDate));
-    loadDay();
-  }
+async function clearDay() {
+  if (!confirm('¿Limpiar los datos de ' + currentDate + '?')) return;
+  setSyncStatus('⟳ Borrando...', '#0C447C');
+  const dateCopy = currentDate;
+
+  // Borrar de Airtable
+  const [vList, rList] = await Promise.all([
+    airtableList(AIRTABLE_TBL_VENDORS, dateCopy),
+    airtableList(AIRTABLE_TBL_RUBROS, dateCopy)
+  ]);
+  const deletes = [];
+  if (vList && vList.records) vList.records.forEach(r => deletes.push(airtableDelete(AIRTABLE_TBL_VENDORS, r.id)));
+  if (rList && rList.records) rList.records.forEach(r => deletes.push(airtableDelete(AIRTABLE_TBL_RUBROS, r.id)));
+  await Promise.all(deletes);
+
+  // Limpiar caché local
+  localStorage.removeItem(dayKey(dateCopy));
+  // Limpiar cache de record IDs de ese día
+  Object.keys(recordCache.vendors).forEach(k => { if (k.startsWith(dateCopy + '|')) delete recordCache.vendors[k]; });
+  Object.keys(recordCache.rubros).forEach(k => { if (k.startsWith(dateCopy + '|')) delete recordCache.rubros[k]; });
+
+  setSyncStatus('✓ Limpiado', '#1D9E75');
+  setTimeout(() => setSyncStatus(''), 2000);
+  loadDay();
+}
+
+async function airtableDelete(table, recordId) {
+  return apiCall({ op: 'delete', table, recordId });
 }
 
 // ── Aggregate: week & month ──

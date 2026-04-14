@@ -38,6 +38,13 @@ export default async function handler(req, res) {
       return res.status(r.status).json(json);
     }
 
+    if (op === 'delete') {
+      const url = `https://api.airtable.com/v0/${AIRTABLE_BASE}/${encodeURIComponent(table)}/${recordId}`;
+      const r = await fetch(url, { method: 'DELETE', headers });
+      const json = await r.json();
+      return res.status(r.status).json(json);
+    }
+
     return res.status(400).json({ error: 'Operación no válida' });
   } catch (e) {
     return res.status(500).json({ error: e.message });
