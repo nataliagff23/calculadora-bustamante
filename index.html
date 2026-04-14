@@ -3,1335 +3,711 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Calculadora de Inversión Meta — Serrano & Bustamante</title>
+  <title>Serrano & Bustamante — Plataforma</title>
   <style>
     :root {
-      --bg-primary: #1e1e1c;
-      --bg-secondary: #2a2a28;
-      --bg-info: #0C447C;
-      --text-primary: #f0ede8;
-      --text-secondary: #9a9990;
-      --text-info: #85B7EB;
-      --text-danger: #F09595;
-      --border-light: rgba(255,255,255,0.10);
-      --border-medium: rgba(255,255,255,0.18);
+      --bg-primary: #ffffff;
+      --bg-secondary: #f5f5f0;
+      --bg-sidebar: #eaeae5;
+      --bg-info: #d6e8fa;
+      --text-primary: #1a1a1a;
+      --text-secondary: #6b6b60;
+      --text-info: #0C447C;
+      --text-danger: #c0392b;
+      --border-light: rgba(0,0,0,0.08);
+      --border-medium: rgba(0,0,0,0.15);
       --radius-md: 8px;
       --radius-lg: 12px;
       --font: 'Inter', system-ui, -apple-system, sans-serif;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
+    body { font-family: var(--font); background: var(--bg-secondary); color: var(--text-primary); min-height: 100vh; padding: 2rem 1rem; }
 
-    body {
-      font-family: var(--font);
-      background: var(--bg-secondary);
-      color: var(--text-primary);
-      min-height: 100vh;
-      padding: 2rem 1rem;
-    }
+    /* Layout */
+    .app { display: flex; max-width: 1100px; margin: 0 auto; gap: 1.25rem; }
+    .main { flex: 1; min-width: 0; }
 
-    .app-layout {
-      display: flex;
-      max-width: 1100px;
-      margin: 0 auto;
-      gap: 1.25rem;
-    }
-    .container {
-      flex: 1;
-      min-width: 0;
-    }
+    /* Sidebar */
+    .sidebar { width: 200px; flex-shrink: 0; position: sticky; top: 2rem; align-self: flex-start; background: var(--bg-sidebar); border: 0.5px solid var(--border-light); border-radius: var(--radius-lg); padding: 1.25rem .75rem; }
+    .sb-brand { font-size: 15px; font-weight: 600; padding: 0 8px; margin-bottom: 4px; }
+    .sb-sub { font-size: 11px; color: var(--text-secondary); padding: 0 8px 12px; border-bottom: 0.5px solid var(--border-light); margin-bottom: 12px; }
+    .sb-nav { display: flex; flex-direction: column; gap: 4px; }
+    .sb-btn { background: transparent; border: none; border-radius: var(--radius-md); color: var(--text-secondary); font-family: var(--font); font-size: 13px; font-weight: 500; padding: 10px 12px; cursor: pointer; text-align: left; transition: all .2s; }
+    .sb-btn:hover { color: var(--text-primary); background: var(--bg-primary); }
+    .sb-btn.active { background: var(--bg-info); color: var(--text-info); font-weight: 600; }
 
-    /* Header */
-    .header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 1.75rem;
-    }
-    .header-title {
-      font-size: 20px;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
-    .header-sub {
-      font-size: 13px;
-      color: var(--text-secondary);
-      margin-top: 3px;
-    }
-    .header-note {
-      font-size: 11px;
-      color: var(--text-secondary);
-      background: var(--bg-primary);
-      border: 0.5px solid var(--border-light);
-      border-radius: var(--radius-md);
-      padding: 6px 12px;
-      align-self: flex-start;
-    }
-
-    /* Sidebar de navegación */
-    .sidebar {
-      width: 200px;
-      flex-shrink: 0;
-      position: sticky;
-      top: 2rem;
-      align-self: flex-start;
-    }
-    .sidebar-brand {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--text-primary);
-      padding: 0 12px;
-      margin-bottom: 4px;
-    }
-    .sidebar-sub {
-      font-size: 11px;
-      color: var(--text-secondary);
-      padding: 0 12px;
-      margin-bottom: 1.25rem;
-    }
-    .tab-nav {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .tab-btn {
-      background: transparent;
-      border: none;
-      border-radius: var(--radius-md);
-      color: var(--text-secondary);
-      font-family: var(--font);
-      font-size: 13px;
-      font-weight: 500;
-      padding: 10px 12px;
-      cursor: pointer;
-      transition: all .2s;
-      text-align: left;
-    }
-    .tab-btn:hover { color: var(--text-primary); background: var(--bg-primary); }
-    .tab-btn.active {
-      background: var(--bg-info);
-      color: var(--text-info);
-      font-weight: 600;
-    }
-    .tab-section { display: none; }
-    .tab-section.active { display: block; }
+    /* Tabs */
+    .tab { display: none; }
+    .tab.active { display: block; }
 
     /* Cards */
-    .card {
-      background: var(--bg-primary);
-      border: 0.5px solid var(--border-light);
-      border-radius: var(--radius-lg);
-      padding: 1.25rem;
-      margin-bottom: 1rem;
-    }
-    .section-label {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      color: var(--text-secondary);
-      margin-bottom: 12px;
-    }
+    .card { background: var(--bg-primary); border: 0.5px solid var(--border-light); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1rem; }
+    .section-label { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 12px; }
 
-    /* Presupuesto */
-    .budget-row {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-    .preset-group {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .preset-btn {
-      border: 0.5px solid var(--border-medium);
-      border-radius: var(--radius-md);
-      background: transparent;
-      color: var(--text-primary);
-      padding: 7px 16px;
-      font-size: 13px;
-      font-family: var(--font);
-      cursor: pointer;
-      transition: background .15s, border-color .15s;
-    }
+    /* Budget */
+    .budget-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .preset-group { display: flex; gap: 8px; flex-wrap: wrap; }
+    .preset-btn { border: 0.5px solid var(--border-medium); border-radius: var(--radius-md); background: transparent; color: var(--text-primary); padding: 7px 16px; font-size: 13px; font-family: var(--font); cursor: pointer; transition: background .15s; }
     .preset-btn:hover { background: var(--bg-secondary); }
-    .preset-btn.active {
-      background: var(--bg-info);
-      border-color: transparent;
-      color: var(--text-info);
-      font-weight: 600;
-    }
-    .slider-group {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex: 1;
-      min-width: 200px;
-    }
-    .slider-group input[type=range] {
-      flex: 1;
-      accent-color: #378ADD;
-    }
-    .budget-input-wrap {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 15px;
-      font-weight: 600;
-    }
+    .preset-btn.active { background: var(--bg-info); border-color: transparent; color: var(--text-info); font-weight: 600; }
+    .slider-group { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 200px; }
+    .slider-group input[type=range] { flex: 1; accent-color: #378ADD; }
+    .budget-input-wrap { display: flex; align-items: center; gap: 4px; font-size: 15px; font-weight: 600; }
     .budget-input-wrap span { color: var(--text-secondary); }
-    .budget-input-wrap input[type=number] {
-      background: transparent;
-      border: 0.5px solid var(--border-medium);
-      border-radius: var(--radius-md);
-      color: var(--text-primary);
-      font-family: var(--font);
-      font-size: 15px;
-      font-weight: 600;
-      padding: 5px 10px;
-      width: 90px;
-      text-align: right;
-    }
-    .budget-input-wrap input[type=number]:focus {
-      outline: none;
-      border-color: #378ADD;
-    }
+    .budget-input-wrap input[type=number] { background: transparent; border: 0.5px solid var(--border-medium); border-radius: var(--radius-md); color: var(--text-primary); font-family: var(--font); font-size: 15px; font-weight: 600; padding: 5px 10px; width: 90px; text-align: right; }
+    .budget-input-wrap input[type=number]:focus { outline: none; border-color: #378ADD; }
 
-    /* Tabla */
+    /* Tables */
     .table-wrap { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th {
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      color: var(--text-secondary);
-      text-align: left;
-      padding: 8px 10px;
-      border-bottom: 0.5px solid var(--border-light);
-      white-space: nowrap;
-    }
-    td {
-      padding: 8px 10px;
-      border-bottom: 0.5px solid var(--border-light);
-      vertical-align: middle;
-      color: var(--text-primary);
-    }
+    th { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--text-secondary); text-align: center; padding: 8px 6px; border-bottom: 0.5px solid var(--border-light); white-space: nowrap; }
+    th:first-child { text-align: left; }
+    td { padding: 7px 6px; border-bottom: 0.5px solid var(--border-light); text-align: center; color: var(--text-primary); }
+    td:first-child { text-align: left; font-weight: 500; font-size: 12px; white-space: nowrap; }
     tr:last-child td { border-bottom: none; }
-    .total-row td {
-      font-weight: 600;
-      background: var(--bg-secondary);
-      border-top: 0.5px solid var(--border-medium);
-    }
+    .total-row td { font-weight: 600; background: var(--bg-secondary); border-top: 0.5px solid var(--border-medium); }
 
-    .badge {
-      display: inline-block;
-      font-size: 11px;
-      padding: 3px 9px;
-      border-radius: 20px;
-      font-weight: 500;
-      white-space: nowrap;
-    }
-    .badge-conv { background: #085041; color: #9FE1CB; }
-    .badge-lead { background: #0C447C; color: #B5D4F4; }
-    .badge-ig   { background: #633806; color: #FAC775; }
-
-    input[type=number].cell-input {
-      background: transparent;
-      border: 0.5px solid var(--border-medium);
-      border-radius: var(--radius-md);
-      color: var(--text-primary);
-      font-family: var(--font);
-      font-size: 13px;
-      padding: 4px 8px;
-      text-align: right;
-    }
+    .badge { display: inline-block; font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 500; white-space: nowrap; }
+    .badge-conv { background: #d4f5e9; color: #085041; }
+    .badge-lead { background: #d6e8fa; color: #0C447C; }
+    .badge-ig { background: #fef0d5; color: #633806; }
+    input[type=number].cell-input { background: transparent; border: 0.5px solid var(--border-medium); border-radius: var(--radius-md); color: var(--text-primary); font-family: var(--font); font-size: 13px; padding: 4px 8px; text-align: right; }
     input[type=number].cell-input:focus { outline: none; border-color: #378ADD; }
+    .pct-warning { font-size: 12px; color: var(--text-danger); margin-top: 8px; display: none; }
 
-    .pct-warning {
-      font-size: 12px;
-      color: var(--text-danger);
-      margin-top: 8px;
-      display: none;
-    }
-
-    /* Métricas */
-    .metrics-grid {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 1rem;
-    }
-    .metric-card {
-      background: var(--bg-primary);
-      border: 0.5px solid var(--border-light);
-      border-radius: var(--radius-md);
-      padding: .875rem 1rem;
-      flex: 1;
-      min-width: 130px;
-    }
+    /* Metrics */
+    .metrics-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 1rem; }
+    .metric-card { background: var(--bg-primary); border: 0.5px solid var(--border-light); border-radius: var(--radius-md); padding: .875rem 1rem; flex: 1; min-width: 130px; }
     .metric-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
-    .metric-value { font-size: 22px; font-weight: 600; color: var(--text-primary); }
-    .metric-sub   { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+    .metric-value { font-size: 22px; font-weight: 600; }
+    .metric-sub { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
 
-    /* Gráfico */
-    .chart-legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 14px;
-      margin-bottom: 12px;
-      font-size: 12px;
-      color: var(--text-secondary);
-    }
+    /* Chart */
+    .chart-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 12px; font-size: 12px; color: var(--text-secondary); }
     .legend-item { display: flex; align-items: center; gap: 5px; }
-    .legend-dot  { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
-    .chart-wrap  { position: relative; width: 100%; height: 360px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+    .chart-wrap { position: relative; width: 100%; height: 360px; }
+    .footer-note { font-size: 12px; color: var(--text-secondary); text-align: center; margin-top: 1.5rem; line-height: 1.6; }
 
-    /* ── Panel de Seguimiento ── */
-    .day-selector {
-      display: flex;
-      gap: 4px;
-      margin-bottom: 14px;
-      flex-wrap: wrap;
-    }
-    .day-btn {
-      background: transparent;
-      border: 0.5px solid var(--border-medium);
-      border-radius: var(--radius-md);
-      color: var(--text-secondary);
-      font-family: var(--font);
-      font-size: 12px;
-      font-weight: 500;
-      padding: 8px 10px;
-      cursor: pointer;
-      transition: all .2s;
-      flex: 1;
-      text-align: center;
-      min-width: 0;
-    }
-    .day-btn:hover { color: var(--text-primary); background: var(--bg-secondary); }
-    .day-btn.active {
-      background: var(--bg-info);
-      color: var(--text-info);
-      font-weight: 600;
-      border-color: transparent;
-    }
-    .day-btn .day-name { display: block; font-size: 12px; }
-    .day-btn .day-date { display: block; font-size: 10px; opacity: 0.7; margin-top: 2px; }
-    .day-btn.has-data { border-color: #1D9E75; }
-    .day-btn.has-data:not(.active) { color: #1D9E75; }
+    /* Control: small inputs */
+    .ctrl-input { background: transparent; border: 0.5px solid var(--border-medium); border-radius: var(--radius-md); color: var(--text-primary); font-family: var(--font); font-size: 13px; padding: 5px 3px; text-align: center; width: 50px; }
+    .ctrl-input:focus { outline: none; border-color: #378ADD; }
+    .total-cell { font-weight: 600; color: var(--text-info); }
 
-    .week-summary-row td { font-size: 12px; }
-    .week-summary-row:hover td { background: rgba(255,255,255,0.03); }
+    /* Date nav */
+    .date-nav { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .date-nav input[type=date] { background: transparent; border: 0.5px solid var(--border-medium); border-radius: var(--radius-md); color: var(--text-primary); font-family: var(--font); font-size: 13px; padding: 7px 10px; }
+    .date-nav input[type=date]:focus { outline: none; border-color: #378ADD; }
+    .nav-btn { background: transparent; border: 0.5px solid var(--border-medium); border-radius: var(--radius-md); color: var(--text-primary); font-family: var(--font); font-size: 14px; padding: 7px 14px; cursor: pointer; }
+    .nav-btn:hover { background: var(--bg-primary); }
 
-    .week-selector {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 12px;
-    }
-    .week-selector label {
-      font-size: 12px;
-      color: var(--text-secondary);
-      font-weight: 500;
-    }
-    .week-selector input[type=date] {
-      background: transparent;
-      border: 0.5px solid var(--border-medium);
-      border-radius: var(--radius-md);
-      color: var(--text-primary);
-      font-family: var(--font);
-      font-size: 13px;
-      padding: 6px 10px;
-    }
-    .week-selector input[type=date]:focus {
-      outline: none;
-      border-color: #378ADD;
-    }
-    .week-selector .week-nav-btn {
-      background: transparent;
-      border: 0.5px solid var(--border-medium);
-      border-radius: var(--radius-md);
-      color: var(--text-primary);
-      font-family: var(--font);
-      font-size: 13px;
-      padding: 6px 12px;
-      cursor: pointer;
-      transition: background .15s;
-    }
-    .week-selector .week-nav-btn:hover { background: var(--bg-primary); }
+    /* Metric boxes for control */
+    .ctrl-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .cm-card { background: var(--bg-secondary); border: 0.5px solid var(--border-light); border-radius: var(--radius-md); padding: 14px; }
+    .cm-val { font-size: 20px; font-weight: 600; }
+    .cm-lbl { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+    .cm-det { font-size: 12px; color: var(--text-info); margin-top: 6px; font-weight: 500; }
 
-    .track-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .track-table th {
-      font-size: 10px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: .05em;
-      color: var(--text-secondary);
-      text-align: center;
-      padding: 8px 4px;
-      border-bottom: 0.5px solid var(--border-light);
-      white-space: nowrap;
-    }
-    .track-table th:first-child { text-align: left; }
-    .track-table td {
-      padding: 6px 4px;
-      border-bottom: 0.5px solid var(--border-light);
-      text-align: center;
-      color: var(--text-primary);
-    }
-    .track-table td:first-child {
-      text-align: left;
-      font-weight: 500;
-      font-size: 12px;
-      white-space: nowrap;
-    }
-    .track-table tr:last-child td { border-bottom: none; }
-    .track-table .total-row td {
-      font-weight: 600;
-      background: var(--bg-secondary);
-      border-top: 0.5px solid var(--border-medium);
-    }
-    .track-table input[type=number] {
-      background: transparent;
-      border: 0.5px solid var(--border-medium);
-      border-radius: var(--radius-md);
-      color: var(--text-primary);
-      font-family: var(--font);
-      font-size: 13px;
-      padding: 4px 2px;
-      text-align: center;
-      width: 48px;
-    }
-    .track-table input[type=number]:focus { outline: none; border-color: #378ADD; }
+    .btn-danger { border: 0.5px solid rgba(240,149,149,0.3); border-radius: var(--radius-md); background: transparent; color: var(--text-danger); font-family: var(--font); font-size: 12px; padding: 8px 16px; cursor: pointer; margin-top: 12px; }
+    .btn-danger:hover { background: rgba(240,149,149,0.1); }
 
-    .track-metrics {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      margin-top: 1rem;
-    }
-    .track-metric-card {
-      background: var(--bg-secondary);
-      border: 0.5px solid var(--border-light);
-      border-radius: var(--radius-md);
-      padding: 12px;
-      text-align: center;
-    }
-    .track-metric-card .tm-value {
-      font-size: 24px;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
-    .track-metric-card .tm-label {
-      font-size: 11px;
-      color: var(--text-secondary);
-      margin-top: 4px;
-    }
-
-    .rubros-track-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .rubros-track-table th {
-      font-size: 10px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: .05em;
-      color: var(--text-secondary);
-      text-align: center;
-      padding: 8px 6px;
-      border-bottom: 0.5px solid var(--border-light);
-      white-space: nowrap;
-    }
-    .rubros-track-table th:first-child { text-align: left; }
-    .rubros-track-table td {
-      padding: 6px;
-      border-bottom: 0.5px solid var(--border-light);
-      text-align: center;
-      color: var(--text-primary);
-    }
-    .rubros-track-table td:first-child {
-      text-align: left;
-      font-weight: 500;
-      font-size: 12px;
-      white-space: nowrap;
-    }
-    .rubros-track-table tr:last-child td { border-bottom: none; }
-    .rubros-track-table .total-row td {
-      font-weight: 600;
-      background: var(--bg-secondary);
-      border-top: 0.5px solid var(--border-medium);
-    }
-    .rubros-track-table input[type=number] {
-      background: transparent;
-      border: 0.5px solid var(--border-medium);
-      border-radius: var(--radius-md);
-      color: var(--text-primary);
-      font-family: var(--font);
-      font-size: 13px;
-      padding: 4px 2px;
-      text-align: center;
-      width: 52px;
-    }
-    .rubros-track-table input[type=number]:focus { outline: none; border-color: #378ADD; }
-    .total-cell {
-      font-weight: 600;
-      color: var(--text-info);
-    }
-
-    .insights-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-    }
-    .insight-card {
-      background: var(--bg-secondary);
-      border: 0.5px solid var(--border-light);
-      border-radius: var(--radius-md);
-      padding: 14px;
-    }
-    .insight-card .ins-value {
-      font-size: 20px;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
-    .insight-card .ins-label {
-      font-size: 11px;
-      color: var(--text-secondary);
-      margin-top: 4px;
-      line-height: 1.4;
-    }
-    .insight-card .ins-detail {
-      font-size: 12px;
-      color: var(--text-info);
-      margin-top: 6px;
-      font-weight: 500;
-    }
-
-    .panel-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 12px;
-      flex-wrap: wrap;
-    }
-    .btn-action {
-      border: 0.5px solid var(--border-medium);
-      border-radius: var(--radius-md);
-      background: transparent;
-      color: var(--text-primary);
-      font-family: var(--font);
-      font-size: 12px;
-      padding: 8px 16px;
-      cursor: pointer;
-      transition: background .15s;
-    }
-    .btn-action:hover { background: var(--bg-secondary); }
-    .btn-action.btn-danger { color: var(--text-danger); border-color: rgba(240,149,149,0.3); }
-    .btn-action.btn-danger:hover { background: rgba(240,149,149,0.1); }
-    .btn-action.btn-primary { background: var(--bg-info); border-color: transparent; color: var(--text-info); font-weight: 600; }
-    .btn-action.btn-primary:hover { opacity: 0.9; }
-
-    @media (max-width: 640px) {
-      .track-metrics { grid-template-columns: repeat(2, 1fr); }
-      .insights-grid { grid-template-columns: repeat(2, 1fr); }
-      .rubros-grid { grid-template-columns: 1fr; }
-      .track-table input[type=number] { width: 40px; font-size: 12px; }
-      .rubro-track-row { grid-template-columns: 1fr; }
-      .rubro-track-row .rtc-vendor { justify-content: space-between; }
-    }
-
-    /* Notas finales */
-    .footer-note {
-      font-size: 12px;
-      color: var(--text-secondary);
-      text-align: center;
-      margin-top: 1.5rem;
-      line-height: 1.6;
-    }
-
+    /* Responsive */
     @media (max-width: 768px) {
-      .app-layout { flex-direction: column; }
-      .sidebar {
-        width: 100%;
-        position: static;
-        margin-bottom: 0.5rem;
-      }
-      .sidebar-brand, .sidebar-sub { text-align: center; }
-      .tab-nav {
-        flex-direction: row;
-        background: var(--bg-primary);
-        border: 0.5px solid var(--border-light);
-        border-radius: var(--radius-lg);
-        padding: 4px;
-      }
-      .tab-btn { flex: 1; text-align: center; }
+      .app { flex-direction: column; }
+      .sidebar { width: 100%; position: static; }
+      .sb-brand, .sb-sub { text-align: center; }
+      .sb-nav { flex-direction: row; background: var(--bg-primary); border: 0.5px solid var(--border-light); border-radius: var(--radius-lg); padding: 4px; }
+      .sb-btn { flex: 1; text-align: center; }
     }
-
     @media (max-width: 640px) {
       body { padding: 1rem 0.75rem; }
-
-      .header { flex-direction: column; }
-      .header-title { font-size: 18px; }
-
-      /* Presupuesto */
       .budget-row { flex-direction: column; align-items: stretch; gap: 12px; }
       .preset-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
       .preset-btn { text-align: center; padding: 10px 12px; font-size: 14px; }
       .slider-group { min-width: unset; }
-      .budget-input-wrap input[type=number] { width: 80px; }
-
-      /* Tabla → tarjetas en móvil */
-      .table-wrap table thead { display: none; }
-      .table-wrap table,
-      .table-wrap table tbody,
-      .table-wrap table tr,
-      .table-wrap table td { display: block; width: 100%; }
-      .table-wrap table tr {
-        background: var(--bg-secondary);
-        border-radius: var(--radius-md);
-        padding: 12px;
-        margin-bottom: 8px;
-        border: 0.5px solid var(--border-light);
-      }
-      .table-wrap table tr:last-child { margin-bottom: 0; }
-      .table-wrap table td {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 4px 0;
-        border-bottom: none;
-        font-size: 13px;
-      }
-      .table-wrap table td::before {
-        content: attr(data-label);
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: .04em;
-        color: var(--text-secondary);
-        flex-shrink: 0;
-        margin-right: 12px;
-      }
-      .table-wrap table td:first-child {
-        font-size: 14px;
-        font-weight: 600;
-        margin-bottom: 4px;
-      }
-      .table-wrap table td:first-child::before { display: none; }
-      .total-row td { background: transparent; border-top: none; }
-      .total-row { border-top: 2px solid var(--border-medium) !important; }
-
-      /* Métricas */
       .metrics-grid { flex-direction: column; }
-      .metric-card {
-        min-width: unset;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 12px 16px;
-      }
+      .metric-card { min-width: unset; display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; }
       .metric-card .metric-label { margin-bottom: 0; }
       .metric-card .metric-value { font-size: 20px; text-align: right; }
       .metric-card .metric-sub { display: none; }
-
-      /* Gráfico */
       .chart-wrap { height: 300px; }
-      .chart-legend { gap: 8px; }
-      .legend-item span { font-size: 11px; }
-
-      /* Cards */
       .card { padding: 1rem; }
+      .ctrl-metrics { grid-template-columns: repeat(2, 1fr); }
+      .ctrl-input { width: 42px; font-size: 12px; }
     }
   </style>
 </head>
 <body>
-<div class="app-layout">
+<div class="app">
 
-  <!-- Sidebar -->
   <aside class="sidebar">
-    <div class="sidebar-brand">Serrano & Bustamante</div>
-    <div class="sidebar-sub">Gestión publicitaria</div>
-    <div class="tab-nav">
-      <button class="tab-btn active" onclick="switchTab('calculadora')">Calculadora de inversión</button>
-      <button class="tab-btn" onclick="switchTab('control')">Control semanal</button>
+    <div class="sb-brand">Serrano & Bustamante</div>
+    <div class="sb-sub">Gestión publicitaria</div>
+    <div class="sb-nav">
+      <button class="sb-btn active" onclick="switchTab('calc',this)">Calculadora</button>
+      <button class="sb-btn" onclick="switchTab('ctrl',this)">Control de leads</button>
     </div>
   </aside>
 
-  <!-- Contenido principal -->
-  <div class="container">
+  <div class="main">
 
-  <!-- ══════ SECCIÓN 1: CALCULADORA ══════ -->
-  <div class="tab-section active" id="tab-calculadora">
-
-  <!-- Presupuesto -->
-  <div class="card">
-    <div class="section-label">Presupuesto mensual</div>
-    <div class="budget-row">
-      <div class="preset-group">
-        <button class="preset-btn" onclick="setPreset(600)">$600</button>
-        <button class="preset-btn active" onclick="setPreset(1000)">$1,000</button>
-        <button class="preset-btn" onclick="setPreset(1500)">$1,500</button>
-        <button class="preset-btn" id="customBtn" onclick="setCustomActive()">Personalizado</button>
-      </div>
-      <div class="slider-group">
-        <input type="range" id="budgetSlider" min="200" max="5000" step="50" value="1000" oninput="onSlider(this.value)">
-        <div class="budget-input-wrap">
-          <span>$</span>
-          <input type="number" id="budgetInput" value="1000" min="200" max="50000" step="50" oninput="onInput(this.value)">
+    <!-- ═══ TAB 1: CALCULADORA ═══ -->
+    <div class="tab active" id="tab-calc">
+      <div class="card">
+        <div class="section-label">Presupuesto mensual</div>
+        <div class="budget-row">
+          <div class="preset-group">
+            <button class="preset-btn" onclick="setPreset(600)">$600</button>
+            <button class="preset-btn active" onclick="setPreset(1000)">$1,000</button>
+            <button class="preset-btn" onclick="setPreset(1500)">$1,500</button>
+            <button class="preset-btn" id="customBtn" onclick="setCustomActive()">Personalizado</button>
+          </div>
+          <div class="slider-group">
+            <input type="range" id="budgetSlider" min="200" max="5000" step="50" value="1000" oninput="onSlider(this.value)">
+            <div class="budget-input-wrap"><span>$</span><input type="number" id="budgetInput" value="1000" min="200" max="50000" step="50" oninput="onInput(this.value)"></div>
+          </div>
         </div>
       </div>
+      <div class="card">
+        <div class="section-label">Distribución por rubro</div>
+        <div class="table-wrap"><table><thead><tr>
+          <th style="min-width:160px;text-align:left">Rubro</th><th>Objetivo</th><th style="min-width:90px">% Inversión</th><th>Inversión</th><th>CPL aprox ($)</th><th>Resultados est.</th>
+        </tr></thead><tbody id="rubroTable"></tbody></table></div>
+        <div class="pct-warning" id="pctWarning">⚠ Los porcentajes no suman 100%</div>
+      </div>
+      <div class="metrics-grid" id="metricCards"></div>
+      <div class="card">
+        <div class="section-label">Resultados estimados por rubro</div>
+        <div class="chart-legend" id="chartLegend"></div>
+        <div class="chart-wrap"><canvas id="rubroChart"></canvas></div>
+      </div>
+      <p class="footer-note">CPL = Costo por resultado. Los valores son estimaciones basadas en benchmarks de la industria.</p>
     </div>
-  </div>
 
-  <!-- Tabla -->
-  <div class="card">
-    <div class="section-label">Distribución por rubro</div>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th style="min-width:160px">Rubro</th>
-            <th>Objetivo</th>
-            <th style="min-width:90px">% Inversión</th>
-            <th>Inversión</th>
-            <th>CPL aprox ($)</th>
-            <th>Resultados est.</th>
-          </tr>
-        </thead>
-        <tbody id="rubroTable"></tbody>
-      </table>
+    <!-- ═══ TAB 2: CONTROL DE LEADS ═══ -->
+    <div class="tab" id="tab-ctrl">
+
+      <!-- Fecha -->
+      <div class="card">
+        <div class="section-label">Fecha del día</div>
+        <div class="date-nav">
+          <button class="nav-btn" onclick="moveDay(-1)">&#8592;</button>
+          <input type="date" id="ctrlDate" onchange="loadDay()">
+          <button class="nav-btn" onclick="moveDay(1)">&#8594;</button>
+          <span style="font-size:13px;color:var(--text-secondary)" id="ctrlDayName"></span>
+          <span style="font-size:12px;margin-left:auto;font-weight:500" id="syncStatus"></span>
+        </div>
+      </div>
+
+      <!-- Vendedoras -->
+      <div class="card">
+        <div class="section-label">Control diario por vendedora</div>
+        <div class="table-wrap">
+          <table id="vendorTable">
+            <thead><tr>
+              <th>Vendedora</th><th>Prospectos</th><th>Instagram</th><th>Showroom</th><th>Respondidos</th><th>Interés alto</th><th>Citas</th><th>Cierres</th>
+            </tr></thead>
+            <tbody id="vendorBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Rubros -->
+      <div class="card">
+        <div class="section-label">Prospectos por rubro</div>
+        <div class="table-wrap">
+          <table id="rubroCtrlTable">
+            <thead><tr>
+              <th>Rubro</th><th>Sabrina</th><th>Tahiruma</th><th>Paola</th><th>Total</th>
+            </tr></thead>
+            <tbody id="rubroCtrlBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Métricas semanales -->
+      <div class="card">
+        <div class="section-label">Resumen semanal</div>
+        <div class="date-nav" style="margin-bottom:12px">
+          <button class="nav-btn" onclick="moveWeek(-1)">&#8592;</button>
+          <span id="weekLabel" style="font-size:13px;font-weight:500"></span>
+          <button class="nav-btn" onclick="moveWeek(1)">&#8594;</button>
+        </div>
+        <div class="ctrl-metrics" id="weekMetrics"></div>
+      </div>
+
+      <!-- Métricas mensuales -->
+      <div class="card">
+        <div class="section-label">Resumen mensual</div>
+        <div class="date-nav" style="margin-bottom:12px">
+          <button class="nav-btn" onclick="moveMonth(-1)">&#8592;</button>
+          <span id="monthLabel" style="font-size:13px;font-weight:500;text-transform:capitalize"></span>
+          <button class="nav-btn" onclick="moveMonth(1)">&#8594;</button>
+        </div>
+        <div class="ctrl-metrics" id="monthMetrics"></div>
+      </div>
+
+      <button class="btn-danger" onclick="clearDay()">Limpiar día actual</button>
     </div>
-    <div class="pct-warning" id="pctWarning">⚠ Los porcentajes no suman 100% — ajusta para resultados precisos.</div>
+
   </div>
-
-  <!-- Métricas -->
-  <div class="metrics-grid" id="metricCards"></div>
-
-  <!-- Gráfico -->
-  <div class="card">
-    <div class="section-label">Resultados estimados por rubro</div>
-    <div class="chart-legend" id="chartLegend"></div>
-    <div class="chart-wrap">
-      <canvas id="rubroChart"></canvas>
-    </div>
-  </div>
-
-  <p class="footer-note">
-    CPL = Costo por resultado. Los valores son estimaciones basadas en benchmarks de la industria.<br>
-    Actualiza el CPL con tus datos reales para proyecciones más precisas.
-  </p>
-
-  </div><!-- /tab-calculadora -->
-
-  <!-- ══════ SECCIÓN 2: CONTROL SEMANAL ══════ -->
-  <div class="tab-section" id="tab-control">
-
-  <!-- Selector de semana -->
-  <div class="card">
-    <div class="section-label">Semana</div>
-    <div class="week-selector">
-      <button class="week-nav-btn" onclick="changeWeek(-1)">&larr;</button>
-      <label>Desde</label>
-      <input type="date" id="weekStart" onchange="onWeekChange()">
-      <label>hasta</label>
-      <input type="date" id="weekEnd" readonly>
-      <button class="week-nav-btn" onclick="changeWeek(1)">&rarr;</button>
-    </div>
-  </div>
-
-  <!-- Control diario -->
-  <div class="card">
-    <div class="section-label">Control diario</div>
-    <div class="day-selector" id="daySelector"></div>
-    <div class="table-wrap">
-      <table class="track-table">
-        <thead>
-          <tr>
-            <th>Vendedora</th>
-            <th>Prospectos</th>
-            <th>Instagram</th>
-            <th>Showroom</th>
-            <th>Respondidos</th>
-            <th>Interés alto</th>
-            <th>Citas</th>
-            <th>Cierres</th>
-          </tr>
-        </thead>
-        <tbody id="dailyTable"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Prospectos por rubro por vendedora -->
-  <div class="card">
-    <div class="section-label">Prospectos por rubro</div>
-    <div class="table-wrap">
-      <table class="rubros-track-table">
-        <thead id="rubrosHead"></thead>
-        <tbody id="rubrosTrack"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Resumen semanal -->
-  <div class="card">
-    <div class="section-label">Resumen semanal</div>
-    <div class="table-wrap">
-      <table class="track-table">
-        <thead>
-          <tr>
-            <th>Día</th>
-            <th>Prospectos</th>
-            <th>Instagram</th>
-            <th>Showroom</th>
-            <th>Respondidos</th>
-            <th>Interés alto</th>
-            <th>Citas</th>
-            <th>Cierres</th>
-          </tr>
-        </thead>
-        <tbody id="weeklyTable"></tbody>
-      </table>
-    </div>
-    <div class="track-metrics" id="trackMetrics"></div>
-  </div>
-
-  <!-- Métricas de la semana -->
-  <div class="card">
-    <div class="section-label">Métricas de la semana</div>
-    <div class="insights-grid" id="weekInsights"></div>
-  </div>
-
-  <!-- Acciones -->
-  <div class="panel-actions">
-    <button class="btn-action btn-danger" onclick="clearWeekData()">Limpiar semana</button>
-  </div>
-
-  </div><!-- /tab-control -->
-
-  </div><!-- /container -->
-</div><!-- /app-layout -->
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
 <script>
-  const RUBROS_DEFAULT = [
-    { name: 'Papel Tapiz — DM',          obj: 'Conversaciones', pct: 15, cpl: 0.60, type: 'conv' },
-    { name: 'Papel Tapiz — Formulario',  obj: 'Lead',           pct: 15, cpl: 1.90, type: 'lead' },
-    { name: 'Iluminación — Formulario',  obj: 'Lead',           pct: 15, cpl: 1.90, type: 'lead' },
-    { name: 'Mobiliario — Formulario',   obj: 'Lead',           pct: 15, cpl: 1.90, type: 'lead' },
-    { name: 'Diseño / Remodelación',     obj: 'Lead',           pct: 15, cpl: 2.50, type: 'lead' },
-    { name: 'Domótica — Formulario',     obj: 'Lead',           pct: 15, cpl: 1.90, type: 'lead' },
-    { name: 'Seguidores en IG',          obj: 'Seguidor',       pct: 10, cpl: 0.05, type: 'ig'   },
-  ];
 
-  const COLORS = ['#1D9E75','#378ADD','#5DCAA5','#185FA5','#BA7517','#3B6D11','#EF9F27'];
+/* ═══════════════════════════════════════
+   TAB SWITCHING
+   ═══════════════════════════════════════ */
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.sb-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'calc') renderChart();
+  if (id === 'ctrl') loadDay();
+}
 
-  let budget = 1000;
-  let rubros = RUBROS_DEFAULT.map(r => ({ ...r }));
-  let chart = null;
+/* ═══════════════════════════════════════
+   CALCULADORA (sin cambios)
+   ═══════════════════════════════════════ */
+const RUBROS_DEFAULT = [
+  { name: 'Papel Tapiz — DM', obj: 'Conversaciones', pct: 15, cpl: 0.60, type: 'conv' },
+  { name: 'Papel Tapiz — Formulario', obj: 'Lead', pct: 15, cpl: 1.90, type: 'lead' },
+  { name: 'Iluminación — Formulario', obj: 'Lead', pct: 15, cpl: 1.90, type: 'lead' },
+  { name: 'Mobiliario — Formulario', obj: 'Lead', pct: 15, cpl: 1.90, type: 'lead' },
+  { name: 'Diseño / Remodelación', obj: 'Lead', pct: 15, cpl: 2.50, type: 'lead' },
+  { name: 'Domótica — Formulario', obj: 'Lead', pct: 15, cpl: 1.90, type: 'lead' },
+  { name: 'Seguidores en IG', obj: 'Seguidor', pct: 10, cpl: 0.05, type: 'ig' },
+];
+const COLORS = ['#1D9E75','#378ADD','#5DCAA5','#185FA5','#BA7517','#3B6D11','#EF9F27'];
+let budget = 1000, rubros = RUBROS_DEFAULT.map(r => ({...r})), chart = null;
 
-  function badgeClass(type) {
-    return type === 'conv' ? 'badge-conv' : type === 'ig' ? 'badge-ig' : 'badge-lead';
+function badgeClass(t) { return t==='conv'?'badge-conv':t==='ig'?'badge-ig':'badge-lead'; }
+function badgeLabel(t) { return t==='conv'?'Conversación':t==='ig'?'Seguidor':'Lead'; }
+function calcResults() { return rubros.map(r => ({...r, inv: budget*r.pct/100, leads: Math.round((budget*r.pct/100)/r.cpl)})); }
+
+function renderTable() {
+  const res = calcResults(), tp = rubros.reduce((s,r)=>s+r.pct,0), ti = res.reduce((s,r)=>s+r.inv,0), tl = res.reduce((s,r)=>s+r.leads,0);
+  document.getElementById('rubroTable').innerHTML = res.map((r,i) => `<tr>
+    <td data-label="" style="font-weight:500;text-align:left">${r.name}</td>
+    <td data-label="Objetivo"><span class="badge ${badgeClass(r.type)}">${badgeLabel(r.type)}</span></td>
+    <td data-label="% Inversión"><div style="display:flex;align-items:center;gap:6px;justify-content:center"><input class="cell-input" type="number" value="${r.pct}" min="0" max="100" step="1" oninput="updatePct(${i},this.value)" style="width:52px"><span style="color:var(--text-secondary);font-size:12px">%</span></div></td>
+    <td data-label="Inversión">$${r.inv.toFixed(0)}</td>
+    <td data-label="CPL aprox"><input class="cell-input" type="number" value="${r.cpl}" min="0.01" step="0.01" oninput="updateCpl(${i},this.value)" style="width:72px"></td>
+    <td data-label="Resultados" style="font-weight:600">${r.leads.toLocaleString()}</td>
+  </tr>`).join('') + `<tr class="total-row"><td data-label="">Total</td><td></td><td style="${Math.round(tp)!==100?'color:var(--text-danger)':''}">${tp.toFixed(0)}%</td><td>$${ti.toFixed(0)}</td><td></td><td>${tl.toLocaleString()}</td></tr>`;
+  document.getElementById('pctWarning').style.display = Math.round(tp)!==100?'block':'none';
+}
+function renderMetrics() {
+  const res = calcResults(), c=res[0].leads, l=res.slice(1,6).reduce((s,r)=>s+r.leads,0), sg=res[6].leads, t=c+l;
+  document.getElementById('metricCards').innerHTML = `
+    <div class="metric-card"><div><div class="metric-label">Inversión mensual</div><div class="metric-sub">presupuesto total</div></div><div class="metric-value">$${budget.toLocaleString()}</div></div>
+    <div class="metric-card"><div><div class="metric-label">Conversaciones (DM)</div><div class="metric-sub">Papel Tapiz</div></div><div class="metric-value">${c.toLocaleString()}</div></div>
+    <div class="metric-card"><div><div class="metric-label">Leads formulario</div><div class="metric-sub">5 rubros</div></div><div class="metric-value">${l.toLocaleString()}</div></div>
+    <div class="metric-card"><div><div class="metric-label">Seguidores IG</div><div class="metric-sub">comunidad</div></div><div class="metric-value">${sg.toLocaleString()}</div></div>
+    <div class="metric-card"><div><div class="metric-label">Total resultados</div><div class="metric-sub">conv. + leads</div></div><div class="metric-value">${t.toLocaleString()}</div></div>`;
+}
+function renderChart() {
+  const res = calcResults(), labels = res.map(r => r.name.length>22?r.name.slice(0,20)+'…':r.name), data = res.map(r => r.leads);
+  document.getElementById('chartLegend').innerHTML = res.map((r,i) => `<div class="legend-item"><div class="legend-dot" style="background:${COLORS[i]}"></div><span>${r.name}</span></div>`).join('');
+  if (chart) chart.destroy();
+  Chart.register(ChartDataLabels);
+  chart = new Chart(document.getElementById('rubroChart'), { type:'bar', data:{labels,datasets:[{data,backgroundColor:COLORS,borderRadius:6,borderSkipped:false,barPercentage:.7}]}, options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:30}},plugins:{legend:{display:false},tooltip:{backgroundColor:'#333',titleColor:'#fff',bodyColor:'#fff',padding:10,cornerRadius:8,callbacks:{label:ctx=>' '+ctx.raw.toLocaleString()+' resultados'}},datalabels:{anchor:'end',align:'top',color:'#1a1a1a',font:{size:12,weight:'600'},formatter:v=>v.toLocaleString()}},scales:{x:{grid:{display:false},ticks:{color:'#6b6b60',font:{size:11},maxRotation:35}},y:{grid:{color:'rgba(0,0,0,0.06)'},ticks:{color:'#6b6b60',font:{size:11}},beginAtZero:true}}}});
+}
+function render() { renderTable(); renderMetrics(); renderChart(); }
+function updatePct(i,v) { rubros[i].pct=parseFloat(v)||0; render(); }
+function updateCpl(i,v) { rubros[i].cpl=parseFloat(v)||0.01; render(); }
+function setPreset(v) { budget=v; document.getElementById('budgetSlider').value=v; document.getElementById('budgetInput').value=v; rubros=RUBROS_DEFAULT.map(r=>({...r})); document.querySelectorAll('.preset-btn').forEach((b,i)=>b.classList.toggle('active',[600,1000,1500].indexOf(v)===i)); render(); }
+function setCustomActive() { document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active')); document.getElementById('customBtn').classList.add('active'); }
+function onSlider(v) { budget=parseInt(v); document.getElementById('budgetInput').value=v; setCustomActive(); render(); }
+function onInput(v) { budget=parseInt(v)||0; document.getElementById('budgetSlider').value=Math.min(5000,budget); setCustomActive(); render(); }
+render();
+
+/* ═══════════════════════════════════════
+   CONTROL DE LEADS
+   ═══════════════════════════════════════ */
+const VENDORS = ['Sabrina','Tahiruma','Paola'];
+const VCOLS = ['prospectos','instagram','showroom','respondidos','interes','citas','cierres'];
+const RUBRO_NAMES = ['Diseño de Interiores','Iluminación','Papel Tapiz','Domótica','Mobiliario','Sonido','Propiedades','Otros'];
+const DAYS_ES = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+
+let currentDate = new Date().toISOString().slice(0,10);
+let saveTimer = null;
+
+// ══════════════════════════════════════
+// AIRTABLE (via proxy serverless en Vercel)
+// ══════════════════════════════════════
+const AIRTABLE_TBL_VENDORS = 'Vendedoras';
+const AIRTABLE_TBL_RUBROS = 'Rubros';
+const API_URL = '/api/airtable';
+
+const FIELD_MAP_VENDOR = {
+  prospectos: 'Prospectos',
+  instagram: 'Instagram',
+  showroom: 'Showroom',
+  respondidos: 'Respondidos',
+  interes: 'Interés Alto',
+  citas: 'Citas',
+  cierres: 'Cierres'
+};
+
+async function apiCall(body) {
+  try {
+    const r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const json = await r.json();
+    if (json.error) {
+      console.error('API error:', body.op, body.table, json.error);
+      setSyncStatus('❌ ' + (json.error.message || json.error.type || 'Error'), '#c0392b');
+    }
+    return json;
+  } catch (e) {
+    console.error('API fetch:', e);
+    setSyncStatus('❌ ' + e.message, '#c0392b');
+    return null;
   }
-  function badgeLabel(type) {
-    return type === 'conv' ? 'Conversación' : type === 'ig' ? 'Seguidor' : 'Lead';
+}
+
+async function airtableList(table, dateStr) {
+  return apiCall({ op: 'list', table, date: dateStr });
+}
+
+async function airtableUpsert(table, recordId, fields) {
+  return apiCall({ op: 'upsert', table, recordId, fields });
+}
+
+// Cache de record IDs para no tener que buscar cada vez
+const recordCache = { vendors: {}, rubros: {} };
+function cacheKey(dateStr, name) { return dateStr + '|' + name; }
+
+function setSyncStatus(text, color) {
+  const el = document.getElementById('syncStatus');
+  if (el) { el.textContent = text; el.style.color = color || 'var(--text-secondary)'; }
+}
+
+async function saveToAirtable(dateStr) {
+  setSyncStatus('⟳ Guardando...', '#0C447C');
+  const data = getDayData(dateStr);
+
+  // Primero listar para saber qué ya existe
+  const [vendorsList, rubrosList] = await Promise.all([
+    airtableList(AIRTABLE_TBL_VENDORS, dateStr),
+    airtableList(AIRTABLE_TBL_RUBROS, dateStr)
+  ]);
+
+  if (vendorsList && vendorsList.records) {
+    vendorsList.records.forEach(r => {
+      recordCache.vendors[cacheKey(dateStr, r.fields.Vendedora)] = r.id;
+    });
   }
-
-  function calcResults() {
-    return rubros.map(r => ({
-      ...r,
-      inv: budget * r.pct / 100,
-      leads: Math.round((budget * r.pct / 100) / r.cpl),
-    }));
-  }
-
-  function renderTable() {
-    const res = calcResults();
-    const totalPct = rubros.reduce((s, r) => s + r.pct, 0);
-    const totalInv = res.reduce((s, r) => s + r.inv, 0);
-    const totalLeads = res.reduce((s, r) => s + r.leads, 0);
-
-    document.getElementById('rubroTable').innerHTML =
-      res.map((r, i) => `
-        <tr>
-          <td data-label="" style="font-weight:500">${r.name}</td>
-          <td data-label="Objetivo"><span class="badge ${badgeClass(r.type)}">${badgeLabel(r.type)}</span></td>
-          <td data-label="% Inversión">
-            <div style="display:flex;align-items:center;gap:6px">
-              <input class="cell-input" type="number" value="${r.pct}" min="0" max="100" step="1" oninput="updatePct(${i}, this.value)" style="width:52px">
-              <span style="color:var(--text-secondary);font-size:12px">%</span>
-            </div>
-          </td>
-          <td data-label="Inversión">$${r.inv.toFixed(0)}</td>
-          <td data-label="CPL aprox">
-            <input class="cell-input" type="number" value="${r.cpl}" min="0.01" step="0.01" oninput="updateCpl(${i}, this.value)" style="width:72px">
-          </td>
-          <td data-label="Resultados" style="font-weight:600">${r.leads.toLocaleString()}</td>
-        </tr>
-      `).join('') +
-      `<tr class="total-row">
-        <td data-label="">Total</td>
-        <td data-label=""></td>
-        <td data-label="% Total" style="${Math.round(totalPct) !== 100 ? 'color:var(--text-danger)' : ''}">${totalPct.toFixed(0)}%</td>
-        <td data-label="Inversión total">$${totalInv.toFixed(0)}</td>
-        <td data-label=""></td>
-        <td data-label="Total resultados">${totalLeads.toLocaleString()}</td>
-      </tr>`;
-
-    document.getElementById('pctWarning').style.display =
-      Math.round(totalPct) !== 100 ? 'block' : 'none';
-  }
-
-  function renderMetrics() {
-    const res = calcResults();
-    const conv  = res[0].leads;
-    const leads = res.slice(1, 6).reduce((s, r) => s + r.leads, 0);
-    const seg   = res[6].leads;
-    const total = conv + leads;
-
-    document.getElementById('metricCards').innerHTML = `
-      <div class="metric-card"><div><div class="metric-label">Inversión mensual</div><div class="metric-sub">presupuesto total</div></div><div class="metric-value">$${budget.toLocaleString()}</div></div>
-      <div class="metric-card"><div><div class="metric-label">Conversaciones (DM)</div><div class="metric-sub">Papel Tapiz</div></div><div class="metric-value">${conv.toLocaleString()}</div></div>
-      <div class="metric-card"><div><div class="metric-label">Leads formulario</div><div class="metric-sub">5 rubros</div></div><div class="metric-value">${leads.toLocaleString()}</div></div>
-      <div class="metric-card"><div><div class="metric-label">Seguidores IG</div><div class="metric-sub">crecimiento comunidad</div></div><div class="metric-value">${seg.toLocaleString()}</div></div>
-      <div class="metric-card"><div><div class="metric-label">Total resultados</div><div class="metric-sub">conv. + leads</div></div><div class="metric-value">${total.toLocaleString()}</div></div>
-    `;
-  }
-
-  function renderChart() {
-    const res = calcResults();
-    const labels = res.map(r => r.name.length > 22 ? r.name.slice(0, 20) + '…' : r.name);
-    const data   = res.map(r => r.leads);
-
-    document.getElementById('chartLegend').innerHTML = res.map((r, i) =>
-      `<div class="legend-item">
-        <div class="legend-dot" style="background:${COLORS[i]}"></div>
-        <span>${r.name}</span>
-      </div>`
-    ).join('');
-
-    if (chart) { chart.destroy(); }
-    Chart.register(ChartDataLabels);
-    chart = new Chart(document.getElementById('rubroChart'), {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [{
-          data,
-          backgroundColor: COLORS,
-          borderRadius: 6,
-          borderSkipped: false,
-          barPercentage: 0.7,
-        }],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        layout: {
-          padding: { top: 30 },
-        },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: '#333',
-            titleColor: '#fff',
-            bodyColor: '#fff',
-            padding: 10,
-            cornerRadius: 8,
-            callbacks: {
-              label: ctx => ' ' + ctx.raw.toLocaleString() + ' resultados',
-            },
-          },
-          datalabels: {
-            anchor: 'end',
-            align: 'top',
-            color: '#f0ede8',
-            font: { size: 12, weight: '600' },
-            formatter: val => val.toLocaleString(),
-          },
-        },
-        scales: {
-          x: {
-            grid: { display: false },
-            ticks: { color: '#9a9990', font: { size: 11 }, maxRotation: 35 },
-          },
-          y: {
-            grid: { color: 'rgba(255,255,255,0.06)' },
-            ticks: { color: '#9a9990', font: { size: 11 } },
-            beginAtZero: true,
-          },
-        },
-      },
+  if (rubrosList && rubrosList.records) {
+    rubrosList.records.forEach(r => {
+      recordCache.rubros[cacheKey(dateStr, r.fields.Rubro)] = r.id;
     });
   }
 
-  function render() { renderTable(); renderMetrics(); renderChart(); }
+  // Guardar vendedoras
+  for (const v of VENDORS) {
+    const vd = data.vendors[v];
+    const fields = { Fecha: dateStr, Vendedora: v };
+    VCOLS.forEach(c => { fields[FIELD_MAP_VENDOR[c]] = vd[c] || 0; });
+    const id = recordCache.vendors[cacheKey(dateStr, v)];
+    const result = await airtableUpsert(AIRTABLE_TBL_VENDORS, id, fields);
+    if (result && result.id) recordCache.vendors[cacheKey(dateStr, v)] = result.id;
+  }
 
-  function updatePct(i, val) { rubros[i].pct = parseFloat(val) || 0; render(); }
-  function updateCpl(i, val) { rubros[i].cpl = parseFloat(val) || 0.01; render(); }
+  // Guardar rubros
+  for (const r of RUBRO_NAMES) {
+    const rd = data.rubros[r] || {};
+    const fields = { Fecha: dateStr, Rubro: r, Sabrina: rd.Sabrina || 0, Tahiruma: rd.Tahiruma || 0, Paola: rd.Paola || 0 };
+    const id = recordCache.rubros[cacheKey(dateStr, r)];
+    const result = await airtableUpsert(AIRTABLE_TBL_RUBROS, id, fields);
+    if (result && result.id) recordCache.rubros[cacheKey(dateStr, r)] = result.id;
+  }
+  setSyncStatus('✓ Guardado', '#1D9E75');
+  setTimeout(() => setSyncStatus(''), 3000);
+}
 
-  function setPreset(val) {
-    budget = val;
-    document.getElementById('budgetSlider').value = val;
-    document.getElementById('budgetInput').value = val;
-    rubros = RUBROS_DEFAULT.map(r => ({ ...r }));
-    document.querySelectorAll('.preset-btn').forEach((b, i) => {
-      b.classList.toggle('active', [600, 1000, 1500].indexOf(val) === i);
+async function loadFromAirtable(dateStr) {
+  const [vendorsList, rubrosList] = await Promise.all([
+    airtableList(AIRTABLE_TBL_VENDORS, dateStr),
+    airtableList(AIRTABLE_TBL_RUBROS, dateStr)
+  ]);
+
+  if (!vendorsList || !vendorsList.records) return null;
+  const data = { vendors: {}, rubros: {} };
+  VENDORS.forEach(v => { data.vendors[v] = {}; VCOLS.forEach(c => data.vendors[v][c] = 0); });
+  RUBRO_NAMES.forEach(r => { data.rubros[r] = {}; VENDORS.forEach(v => data.rubros[r][v] = 0); });
+
+  vendorsList.records.forEach(r => {
+    const v = r.fields.Vendedora;
+    if (!data.vendors[v]) return;
+    VCOLS.forEach(c => { data.vendors[v][c] = r.fields[FIELD_MAP_VENDOR[c]] || 0; });
+    recordCache.vendors[cacheKey(dateStr, v)] = r.id;
+  });
+
+  if (rubrosList && rubrosList.records) {
+    rubrosList.records.forEach(r => {
+      const name = r.fields.Rubro;
+      if (!data.rubros[name]) return;
+      data.rubros[name].Sabrina = r.fields.Sabrina || 0;
+      data.rubros[name].Tahiruma = r.fields.Tahiruma || 0;
+      data.rubros[name].Paola = r.fields.Paola || 0;
+      recordCache.rubros[cacheKey(dateStr, name)] = r.id;
     });
-    render();
   }
 
-  function setCustomActive() {
-    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('customBtn').classList.add('active');
+  const hasData = vendorsList.records.length > 0 || (rubrosList && rubrosList.records.length > 0);
+  return hasData ? data : null;
+}
+
+function scheduleSave(dateStr) {
+  clearTimeout(saveTimer);
+  const dateCopy = dateStr;
+  saveTimer = setTimeout(() => { saveToAirtable(dateCopy); }, 2000);
+}
+
+// ── LocalStorage helpers ──
+function dayKey(d) { return 'leads_' + d; }
+function getDayData(d) {
+  const s = localStorage.getItem(dayKey(d));
+  if (s) return JSON.parse(s);
+  const out = { vendors: {}, rubros: {} };
+  VENDORS.forEach(v => { out.vendors[v] = {}; VCOLS.forEach(c => out.vendors[v][c] = 0); });
+  RUBRO_NAMES.forEach(r => { out.rubros[r] = {}; VENDORS.forEach(v => out.rubros[r][v] = 0); });
+  return out;
+}
+function saveDayData(d, data) { localStorage.setItem(dayKey(d), JSON.stringify(data)); }
+
+function moveDay(dir) {
+  const d = new Date(currentDate + 'T12:00:00');
+  d.setDate(d.getDate() + dir);
+  currentDate = d.toISOString().slice(0,10);
+  document.getElementById('ctrlDate').value = currentDate;
+  loadDay();
+}
+
+// ── Render the form (only called on date change) ──
+function loadDay() {
+  currentDate = document.getElementById('ctrlDate').value || currentDate;
+  document.getElementById('ctrlDate').value = currentDate;
+  const dayOfWeek = DAYS_ES[new Date(currentDate + 'T12:00:00').getDay()];
+  document.getElementById('ctrlDayName').textContent = dayOfWeek;
+
+  // Actualizar semana y mes seleccionados al del día actual
+  selectedWeekStart = getWeekStart(currentDate);
+  selectedMonth = currentDate.slice(0, 7);
+
+  // Siempre renderizar inmediatamente con datos locales (vacíos si no hay)
+  renderDayUI(getDayData(currentDate));
+
+  // Si no hay datos locales, intentar cargar de Airtable en background
+  if (!localStorage.getItem(dayKey(currentDate))) {
+    const dateAtLoad = currentDate;
+    loadFromAirtable(currentDate).then(data => {
+      if (dateAtLoad !== currentDate || !data) return;
+      saveDayData(dateAtLoad, data);
+      renderDayUI(data);
+    }).catch(() => {});
   }
+}
 
-  function onSlider(val) {
-    budget = parseInt(val);
-    document.getElementById('budgetInput').value = val;
-    setCustomActive();
-    render();
-  }
+function renderDayUI(data) {
+  // Vendor table
+  let vh = '';
+  VENDORS.forEach(v => {
+    vh += `<tr><td style="font-weight:600">${v}</td>`;
+    VCOLS.forEach(c => {
+      const val = data.vendors[v][c] || 0;
+      vh += `<td><input class="ctrl-input" type="number" value="${val}" min="0" data-vendor="${v}" data-col="${c}" oninput="onVendorInput(this)"></td>`;
+    });
+    vh += '</tr>';
+  });
+  vh += '<tr class="total-row"><td>Total</td>';
+  VCOLS.forEach(c => {
+    const t = VENDORS.reduce((s,v) => s + (data.vendors[v][c]||0), 0);
+    vh += `<td class="vt-${c}">${t}</td>`;
+  });
+  vh += '</tr>';
+  document.getElementById('vendorBody').innerHTML = vh;
 
-  function onInput(val) {
-    budget = parseInt(val) || 0;
-    document.getElementById('budgetSlider').value = Math.min(5000, budget);
-    setCustomActive();
-    render();
-  }
-
-  render();
-
-  /* ══════════════════════════════════════
-     Navegación por tabs
-     ══════════════════════════════════════ */
-
-  function switchTab(tab) {
-    document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('tab-' + tab).classList.add('active');
-    event.currentTarget.classList.add('active');
-    if (tab === 'control') renderPanel();
-    if (tab === 'calculadora') renderChart();
-  }
-
-  /* ══════════════════════════════════════
-     Panel de Seguimiento Semanal
-     ══════════════════════════════════════ */
-
-  const TRACK_COLS = ['prospectos','instagram','showroom','respondidos','interes','citas','cierres'];
-  const VENDORS = ['Sabrina','Tahiruma','Paola'];
-  const RUBROS_TRACK = ['Diseño de Interiores','Iluminación','Papel Tapiz','Domótica','Mobiliario','Sonido','Propiedades','Otros'];
-  const DAY_NAMES = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
-
-  let currentWeekStart = getMonday(new Date());
-  let selectedDay = 0; // 0-6 (Lun-Dom)
-
-  function getMonday(d) {
-    const date = new Date(d);
-    const day = date.getDay();
-    const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-    date.setDate(diff);
-    date.setHours(0,0,0,0);
-    return date;
-  }
-
-  function weekKey(date) {
-    return date.toISOString().slice(0, 10);
-  }
-
-  function dayKey(dayIndex) {
-    const d = new Date(currentWeekStart.getTime() + dayIndex * 86400000);
-    return d.toISOString().slice(0, 10);
-  }
-
-  function initEmptyDay() {
-    const vendors = {};
+  // Rubros table
+  let rh = '';
+  RUBRO_NAMES.forEach(r => {
+    rh += `<tr><td>${r}</td>`;
     VENDORS.forEach(v => {
-      vendors[v] = {};
-      TRACK_COLS.forEach(c => vendors[v][c] = 0);
+      const val = data.rubros[r] ? (data.rubros[r][v]||0) : 0;
+      rh += `<td><input class="ctrl-input" type="number" value="${val}" min="0" data-rubro="${r}" data-vendor="${v}" oninput="onRubroInput(this)"></td>`;
     });
-    return vendors;
+    const rt = VENDORS.reduce((s,v) => s + (data.rubros[r]?(data.rubros[r][v]||0):0), 0);
+    rh += `<td class="total-cell rt-${r.replace(/\s/g,'_')}">${rt}</td></tr>`;
+  });
+  document.getElementById('rubroCtrlBody').innerHTML = rh;
+
+  renderSummaries();
+}
+
+// ── Input handlers: save + update totals WITHOUT re-rendering ──
+function onVendorInput(el) {
+  const v = el.dataset.vendor, c = el.dataset.col, val = parseInt(el.value) || 0;
+  const data = getDayData(currentDate);
+  data.vendors[v][c] = val;
+  saveDayData(currentDate, data);
+  scheduleSave(currentDate);
+
+  // Update total row
+  VCOLS.forEach(col => {
+    const t = VENDORS.reduce((s,vn) => s + (data.vendors[vn][col]||0), 0);
+    const cell = document.querySelector(`.vt-${col}`);
+    if (cell) cell.textContent = t;
+  });
+  renderSummaries();
+}
+
+function onRubroInput(el) {
+  const r = el.dataset.rubro, v = el.dataset.vendor, val = parseInt(el.value) || 0;
+  const data = getDayData(currentDate);
+  if (!data.rubros[r]) { data.rubros[r] = {}; VENDORS.forEach(vn => data.rubros[r][vn] = 0); }
+  data.rubros[r][v] = val;
+  saveDayData(currentDate, data);
+  scheduleSave(currentDate);
+
+  // Update row total
+  const rt = VENDORS.reduce((s,vn) => s + (data.rubros[r][vn]||0), 0);
+  const cell = document.querySelector(`.rt-${r.replace(/\\s/g,'_')}`);
+  if (cell) cell.textContent = rt;
+  renderSummaries();
+}
+
+function clearDay() {
+  if (confirm('¿Limpiar los datos de ' + currentDate + '?')) {
+    localStorage.removeItem(dayKey(currentDate));
+    loadDay();
   }
+}
 
-  function getWeekData() {
-    const key = 'track_' + weekKey(currentWeekStart);
-    const saved = localStorage.getItem(key);
-    if (saved) return JSON.parse(saved);
-    const days = {};
-    for (let i = 0; i < 7; i++) {
-      days[dayKey(i)] = initEmptyDay();
-    }
-    const rubros = {};
-    RUBROS_TRACK.forEach(r => {
-      rubros[r] = {};
-      VENDORS.forEach(v => rubros[r][v] = 0);
-    });
-    return { days, rubros };
+// ── Aggregate: week & month ──
+function getDateRange(start, days) {
+  const dates = [];
+  const d = new Date(start + 'T12:00:00');
+  for (let i = 0; i < days; i++) {
+    dates.push(d.toISOString().slice(0,10));
+    d.setDate(d.getDate() + 1);
   }
+  return dates;
+}
 
-  function saveWeekData(data) {
-    const key = 'track_' + weekKey(currentWeekStart);
-    localStorage.setItem(key, JSON.stringify(data));
-  }
+function getWeekStart(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  d.setDate(diff);
+  return d.toISOString().slice(0,10);
+}
 
-  function dayHasData(data, dayIdx) {
-    const dk = dayKey(dayIdx);
-    const dayData = data.days[dk];
-    if (!dayData) return false;
-    return VENDORS.some(v => dayData[v] && TRACK_COLS.some(c => (dayData[v][c] || 0) > 0));
-  }
+let selectedWeekStart = getWeekStart(currentDate);
+let selectedMonth = currentDate.slice(0, 7); // 'YYYY-MM'
 
-  function changeWeek(dir) {
-    currentWeekStart = new Date(currentWeekStart.getTime() + dir * 7 * 86400000);
-    selectedDay = 0;
-    renderPanel();
-  }
+function moveWeek(dir) {
+  const d = new Date(selectedWeekStart + 'T12:00:00');
+  d.setDate(d.getDate() + dir * 7);
+  selectedWeekStart = d.toISOString().slice(0,10);
+  renderSummaries();
+}
 
-  function onWeekChange() {
-    const val = document.getElementById('weekStart').value;
-    if (val) {
-      currentWeekStart = getMonday(new Date(val + 'T12:00:00'));
-      selectedDay = 0;
-      renderPanel();
-    }
-  }
+function moveMonth(dir) {
+  const d = new Date(selectedMonth + '-15');
+  d.setMonth(d.getMonth() + dir);
+  selectedMonth = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+  renderSummaries();
+}
 
-  function selectDay(i) {
-    selectedDay = i;
-    renderPanel();
-  }
+function formatWeekLabel(ws) {
+  const start = new Date(ws + 'T12:00:00');
+  const end = new Date(start); end.setDate(end.getDate() + 6);
+  const opts = { day: 'numeric', month: 'short' };
+  return start.toLocaleDateString('es', opts) + ' — ' + end.toLocaleDateString('es', opts) + ', ' + end.getFullYear();
+}
 
-  function formatDateShort(date) {
-    return date.toLocaleDateString('es', { day: 'numeric', month: 'short' });
-  }
+function aggregateDays(dates) {
+  const totals = {}; VCOLS.forEach(c => totals[c] = 0);
+  const rubroTotals = {}; RUBRO_NAMES.forEach(r => rubroTotals[r] = 0);
+  let daysWithData = 0, bestDay = '', bestDayVal = 0;
+  const vendorTotals = {}; VENDORS.forEach(v => vendorTotals[v] = 0);
 
-  function renderPanel() {
-    const data = getWeekData();
-    const endDate = new Date(currentWeekStart.getTime() + 6 * 86400000);
-
-    document.getElementById('weekStart').value = weekKey(currentWeekStart);
-    document.getElementById('weekEnd').value = weekKey(endDate);
-
-    // ── Selector de días ──
-    let daysHtml = '';
-    for (let i = 0; i < 7; i++) {
-      const dayDate = new Date(currentWeekStart.getTime() + i * 86400000);
-      const hasData = dayHasData(data, i);
-      const isActive = i === selectedDay;
-      daysHtml += `<button class="day-btn${isActive ? ' active' : ''}${hasData && !isActive ? ' has-data' : ''}" onclick="selectDay(${i})">
-        <span class="day-name">${DAY_NAMES[i]}</span>
-        <span class="day-date">${formatDateShort(dayDate)}</span>
-      </button>`;
-    }
-    document.getElementById('daySelector').innerHTML = daysHtml;
-
-    // ── Tabla diaria por vendedora ──
-    const dk = dayKey(selectedDay);
-    if (!data.days[dk]) data.days[dk] = initEmptyDay();
-    const dayData = data.days[dk];
-
-    const dayTotals = {};
-    TRACK_COLS.forEach(c => dayTotals[c] = 0);
-
-    let dailyHtml = '';
-    VENDORS.forEach(vendor => {
-      const vd = dayData[vendor] || {};
-      dailyHtml += `<tr><td style="font-weight:600">${vendor}</td>`;
-      TRACK_COLS.forEach(col => {
-        const val = vd[col] || 0;
-        dayTotals[col] += val;
-        dailyHtml += `<td><input type="number" value="${val}" min="0" onchange="updateDayTrack('${vendor}','${col}',this.value)"></td>`;
-      });
-      dailyHtml += '</tr>';
-    });
-    dailyHtml += `<tr class="total-row"><td>Total del día</td>`;
-    TRACK_COLS.forEach(col => { dailyHtml += `<td>${dayTotals[col]}</td>`; });
-    dailyHtml += '</tr>';
-    document.getElementById('dailyTable').innerHTML = dailyHtml;
-
-    // ── Resumen semanal ──
-    const weekTotals = {};
-    TRACK_COLS.forEach(c => weekTotals[c] = 0);
-
-    let weeklyHtml = '';
-    for (let i = 0; i < 7; i++) {
-      const dki = dayKey(i);
-      const dd = data.days[dki] || {};
-      const dayDate = new Date(currentWeekStart.getTime() + i * 86400000);
-      const label = DAY_NAMES[i] + ' ' + formatDateShort(dayDate);
-      const rowTotals = {};
-      TRACK_COLS.forEach(c => {
-        rowTotals[c] = 0;
-        VENDORS.forEach(v => { rowTotals[c] += (dd[v] && dd[v][c]) || 0; });
-        weekTotals[c] += rowTotals[c];
-      });
-      const hasAny = TRACK_COLS.some(c => rowTotals[c] > 0);
-      weeklyHtml += `<tr class="week-summary-row" style="cursor:pointer;${i === selectedDay ? 'background:rgba(55,138,221,0.08)' : ''}" onclick="selectDay(${i})">`;
-      weeklyHtml += `<td style="font-weight:500">${label}</td>`;
-      TRACK_COLS.forEach(col => {
-        const v = rowTotals[col];
-        weeklyHtml += `<td style="${v > 0 ? 'font-weight:500' : 'color:var(--text-secondary)'}">${v}</td>`;
-      });
-      weeklyHtml += '</tr>';
-    }
-    weeklyHtml += `<tr class="total-row"><td>Total semana</td>`;
-    TRACK_COLS.forEach(col => { weeklyHtml += `<td>${weekTotals[col]}</td>`; });
-    weeklyHtml += '</tr>';
-    document.getElementById('weeklyTable').innerHTML = weeklyHtml;
-
-    // ── Métricas resumen semanal ──
-    document.getElementById('trackMetrics').innerHTML = `
-      <div class="track-metric-card"><div class="tm-value">${weekTotals.prospectos}</div><div class="tm-label">Prospectos totales</div></div>
-      <div class="track-metric-card"><div class="tm-value">${weekTotals.respondidos}</div><div class="tm-label">Respondidos</div></div>
-      <div class="track-metric-card"><div class="tm-value">${weekTotals.citas}</div><div class="tm-label">Citas</div></div>
-      <div class="track-metric-card"><div class="tm-value">${weekTotals.cierres}</div><div class="tm-label">Cierres</div></div>
-    `;
-
-    // ── Métricas / Insights de la semana ──
-    renderInsights(data, weekTotals);
-
-    // ── Tabla de rubros por vendedora ──
-    document.getElementById('rubrosHead').innerHTML = `
-      <tr>
-        <th>Rubro</th>
-        ${VENDORS.map(v => `<th>${v}</th>`).join('')}
-        <th>Total</th>
-      </tr>`;
-
-    let rubrosHtml = '';
-    RUBROS_TRACK.forEach(rubro => {
-      const rd = data.rubros[rubro] || {};
-      let rubroTotal = 0;
-      rubrosHtml += `<tr><td>${rubro}</td>`;
-      VENDORS.forEach(v => {
-        const val = rd[v] || 0;
-        rubroTotal += val;
-        rubrosHtml += `<td><input type="number" value="${val}" min="0" onchange="updateRubroTrack('${rubro}','${v}',this.value)"></td>`;
-      });
-      rubrosHtml += `<td class="total-cell">${rubroTotal}</td></tr>`;
-    });
-    document.getElementById('rubrosTrack').innerHTML = rubrosHtml;
-  }
-
-  function renderInsights(data, weekTotals) {
-    // Rubro más popular
-    let topRubro = '—', topRubroVal = 0;
-    RUBROS_TRACK.forEach(r => {
-      const rd = data.rubros[r] || {};
-      const total = VENDORS.reduce((s, v) => s + (rd[v] || 0), 0);
-      if (total > topRubroVal) { topRubroVal = total; topRubro = r; }
-    });
-
-    // Día con más prospectos
-    let bestDay = '—', bestDayVal = 0;
-    for (let i = 0; i < 7; i++) {
-      const dki = dayKey(i);
-      const dd = data.days[dki] || {};
-      const total = VENDORS.reduce((s, v) => s + ((dd[v] && dd[v].prospectos) || 0), 0);
-      if (total > bestDayVal) {
-        bestDayVal = total;
-        const dayDate = new Date(currentWeekStart.getTime() + i * 86400000);
-        bestDay = DAY_NAMES[i] + ' ' + formatDateShort(dayDate);
-      }
-    }
-
-    // Vendedora con más prospectos en la semana
-    let topVendor = '—', topVendorVal = 0;
+  dates.forEach(dt => {
+    const data = getDayData(dt);
+    let dayProspectos = 0;
     VENDORS.forEach(v => {
-      let total = 0;
-      for (let i = 0; i < 7; i++) {
-        const dki = dayKey(i);
-        const dd = data.days[dki] || {};
-        total += (dd[v] && dd[v].prospectos) || 0;
-      }
-      if (total > topVendorVal) { topVendorVal = total; topVendor = v; }
+      VCOLS.forEach(c => { totals[c] += data.vendors[v][c] || 0; });
+      vendorTotals[v] += (data.vendors[v].citas || 0) + (data.vendors[v].cierres || 0);
+      dayProspectos += data.vendors[v].prospectos || 0;
     });
+    RUBRO_NAMES.forEach(r => {
+      if (data.rubros[r]) VENDORS.forEach(v => rubroTotals[r] += data.rubros[r][v] || 0);
+    });
+    if (dayProspectos > 0) daysWithData++;
+    if (dayProspectos > bestDayVal) { bestDayVal = dayProspectos; bestDay = dt; }
+  });
 
-    // Tasa de respuesta
-    const tasaResp = weekTotals.prospectos > 0
-      ? Math.round((weekTotals.respondidos / weekTotals.prospectos) * 100) : 0;
+  // Top rubro
+  let topRubro = '—', topRubroVal = 0;
+  RUBRO_NAMES.forEach(r => { if (rubroTotals[r] > topRubroVal) { topRubroVal = rubroTotals[r]; topRubro = r; } });
 
-    // Tasa de cierre (cierres / citas)
-    const tasaCierre = weekTotals.citas > 0
-      ? Math.round((weekTotals.cierres / weekTotals.citas) * 100) : 0;
+  // Top vendor
+  let topVendor = '—', topVendorVal = 0;
+  VENDORS.forEach(v => { if (vendorTotals[v] > topVendorVal) { topVendorVal = vendorTotals[v]; topVendor = v; } });
 
-    // Canal principal (IG vs Showroom)
-    const pctIG = weekTotals.prospectos > 0
-      ? Math.round((weekTotals.instagram / weekTotals.prospectos) * 100) : 0;
+  const tasaResp = totals.prospectos > 0 ? Math.round(totals.respondidos / totals.prospectos * 100) : 0;
+  const tasaCierre = totals.citas > 0 ? Math.round(totals.cierres / totals.citas * 100) : 0;
 
-    document.getElementById('weekInsights').innerHTML = `
-      <div class="insight-card">
-        <div class="ins-value">${topRubro}</div>
-        <div class="ins-label">Rubro más solicitado</div>
-        <div class="ins-detail">${topRubroVal} prospectos</div>
-      </div>
-      <div class="insight-card">
-        <div class="ins-value">${bestDay}</div>
-        <div class="ins-label">Día con más prospectos</div>
-        <div class="ins-detail">${bestDayVal} prospectos</div>
-      </div>
-      <div class="insight-card">
-        <div class="ins-value">${topVendor}</div>
-        <div class="ins-label">Vendedora top de la semana</div>
-        <div class="ins-detail">${topVendorVal} prospectos</div>
-      </div>
-      <div class="insight-card">
-        <div class="ins-value">${weekTotals.citas}</div>
-        <div class="ins-label">Citas en la semana</div>
-        <div class="ins-detail">${weekTotals.cierres} cierres</div>
-      </div>
-      <div class="insight-card">
-        <div class="ins-value">${tasaResp}%</div>
-        <div class="ins-label">Tasa de respuesta</div>
-        <div class="ins-detail">${weekTotals.respondidos} de ${weekTotals.prospectos}</div>
-      </div>
-      <div class="insight-card">
-        <div class="ins-value">${tasaCierre}%</div>
-        <div class="ins-label">Tasa de cierre</div>
-        <div class="ins-detail">${pctIG}% viene de Instagram</div>
-      </div>
-    `;
-  }
+  return { totals, topRubro, topRubroVal, bestDay, bestDayVal, topVendor, topVendorVal, tasaResp, tasaCierre, daysWithData };
+}
 
-  function updateDayTrack(vendor, col, val) {
-    const data = getWeekData();
-    const dk = dayKey(selectedDay);
-    if (!data.days[dk]) data.days[dk] = initEmptyDay();
-    if (!data.days[dk][vendor]) { data.days[dk][vendor] = {}; TRACK_COLS.forEach(c => data.days[dk][vendor][c] = 0); }
-    data.days[dk][vendor][col] = parseInt(val) || 0;
-    saveWeekData(data);
-    renderPanel();
-  }
+function renderSummaries() {
+  // Week
+  const weekDates = getDateRange(selectedWeekStart, 7);
+  const w = aggregateDays(weekDates);
+  document.getElementById('weekLabel').textContent = formatWeekLabel(selectedWeekStart);
+  document.getElementById('weekMetrics').innerHTML = `
+    <div class="cm-card"><div class="cm-val">${w.totals.prospectos}</div><div class="cm-lbl">Prospectos</div></div>
+    <div class="cm-card"><div class="cm-val">${w.totals.instagram}</div><div class="cm-lbl">Instagram</div></div>
+    <div class="cm-card"><div class="cm-val">${w.totals.showroom}</div><div class="cm-lbl">Showroom</div></div>
+    <div class="cm-card"><div class="cm-val">${w.totals.respondidos}</div><div class="cm-lbl">Respondidos</div></div>
+    <div class="cm-card"><div class="cm-val">${w.totals.citas}</div><div class="cm-lbl">Citas</div></div>
+    <div class="cm-card"><div class="cm-val">${w.totals.cierres}</div><div class="cm-lbl">Cierres</div></div>
+    <div class="cm-card"><div class="cm-val">${w.topRubro}</div><div class="cm-lbl">Rubro top</div><div class="cm-det">${w.topRubroVal} prospectos</div></div>
+    <div class="cm-card"><div class="cm-val">${w.topVendor}</div><div class="cm-lbl">Vendedora top</div><div class="cm-det">${w.topVendorVal} citas+cierres</div></div>
+    <div class="cm-card"><div class="cm-val">${w.tasaResp}%</div><div class="cm-lbl">Tasa respuesta</div><div class="cm-det">${w.totals.respondidos} de ${w.totals.prospectos}</div></div>
+  `;
 
-  function updateRubroTrack(rubro, vendor, val) {
-    const data = getWeekData();
-    if (!data.rubros[rubro]) { data.rubros[rubro] = {}; VENDORS.forEach(v => data.rubros[rubro][v] = 0); }
-    data.rubros[rubro][vendor] = parseInt(val) || 0;
-    saveWeekData(data);
-    renderPanel();
-  }
+  // Month
+  const md = new Date(selectedMonth + '-15');
+  const monthStart = selectedMonth + '-01';
+  const daysInMonth = new Date(md.getFullYear(), md.getMonth()+1, 0).getDate();
+  const monthDates = getDateRange(monthStart, daysInMonth);
+  const m = aggregateDays(monthDates);
+  const monthName = md.toLocaleDateString('es', { month: 'long', year: 'numeric' });
+  document.getElementById('monthLabel').textContent = monthName;
+  document.getElementById('monthMetrics').innerHTML = `
+    <div class="cm-card"><div class="cm-val">${m.totals.prospectos}</div><div class="cm-lbl">Prospectos</div><div class="cm-det">${monthName}</div></div>
+    <div class="cm-card"><div class="cm-val">${m.totals.instagram}</div><div class="cm-lbl">Instagram</div></div>
+    <div class="cm-card"><div class="cm-val">${m.totals.showroom}</div><div class="cm-lbl">Showroom</div></div>
+    <div class="cm-card"><div class="cm-val">${m.totals.respondidos}</div><div class="cm-lbl">Respondidos</div></div>
+    <div class="cm-card"><div class="cm-val">${m.totals.citas}</div><div class="cm-lbl">Citas</div></div>
+    <div class="cm-card"><div class="cm-val">${m.totals.cierres}</div><div class="cm-lbl">Cierres</div></div>
+    <div class="cm-card"><div class="cm-val">${m.topRubro}</div><div class="cm-lbl">Rubro top del mes</div><div class="cm-det">${m.topRubroVal} prospectos</div></div>
+    <div class="cm-card"><div class="cm-val">${m.topVendor}</div><div class="cm-lbl">Vendedora top del mes</div><div class="cm-det">${m.topVendorVal} citas+cierres</div></div>
+    <div class="cm-card"><div class="cm-val">${m.tasaCierre}%</div><div class="cm-lbl">Tasa de cierre</div><div class="cm-det">${m.totals.cierres} de ${m.totals.citas} citas</div></div>
+  `;
+}
 
-  function clearWeekData() {
-    if (confirm('¿Limpiar todos los datos de esta semana?')) {
-      const key = 'track_' + weekKey(currentWeekStart);
-      localStorage.removeItem(key);
-      renderPanel();
-    }
-  }
-
-  // Auto-seleccionar el día de hoy si está en la semana actual
-  (function() {
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    const diff = Math.floor((today - currentWeekStart) / 86400000);
-    if (diff >= 0 && diff < 7) selectedDay = diff;
-    renderPanel();
-  })();
+// Init date
+document.getElementById('ctrlDate').value = currentDate;
 </script>
 </body>
 </html>
