@@ -329,7 +329,7 @@
         <div class="table-wrap">
           <table id="rubroCtrlTable">
             <thead><tr>
-              <th>Rubro</th><th>Sabrina</th><th>Tahiruma</th><th>Paola</th><th>Total</th>
+              <th>Rubro</th><th>Sabrina</th><th>Tahiruma</th><th>Paola</th><th>Miriam</th><th>Total</th>
             </tr></thead>
             <tbody id="rubroCtrlBody"></tbody>
           </table>
@@ -439,7 +439,7 @@ render();
 /* ═══════════════════════════════════════
    CONTROL DE LEADS
    ═══════════════════════════════════════ */
-const VENDORS = ['Sabrina','Tahiruma','Paola'];
+const VENDORS = ['Sabrina','Tahiruma','Paola','Miriam'];
 const VCOLS = ['prospectos','instagram','showroom','respondidos','interes','citas','cierres'];
 const RUBRO_NAMES = ['Diseño de Interiores','Iluminación','Papel Tapiz','Domótica','Mobiliario','Sonido','Propiedades','Otros'];
 const DAYS_ES = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
@@ -531,7 +531,8 @@ async function saveToAirtable(dateStr) {
   // Guardar rubros
   for (const r of RUBRO_NAMES) {
     const rd = data.rubros[r] || {};
-    const fields = { Fecha: dateStr, Rubro: r, Sabrina: rd.Sabrina || 0, Tahiruma: rd.Tahiruma || 0, Paola: rd.Paola || 0 };
+    const fields = { Fecha: dateStr, Rubro: r };
+    VENDORS.forEach(v => { fields[v] = rd[v] || 0; });
     const id = recordCache.rubros[cacheKey(dateStr, r)];
     const result = await airtableUpsert(AIRTABLE_TBL_RUBROS, id, fields);
     if (result && result.id) recordCache.rubros[cacheKey(dateStr, r)] = result.id;
@@ -562,9 +563,7 @@ async function loadFromAirtable(dateStr) {
     rubrosList.records.forEach(r => {
       const name = r.fields.Rubro;
       if (!data.rubros[name]) return;
-      data.rubros[name].Sabrina = Number(r.fields.Sabrina) || 0;
-      data.rubros[name].Tahiruma = Number(r.fields.Tahiruma) || 0;
-      data.rubros[name].Paola = Number(r.fields.Paola) || 0;
+      VENDORS.forEach(v => { data.rubros[name][v] = Number(r.fields[v]) || 0; });
       recordCache.rubros[cacheKey(dateStr, name)] = r.id;
     });
   }
@@ -582,11 +581,19 @@ function scheduleSave(dateStr) {
 // ── LocalStorage helpers ──
 function dayKey(d) { return 'leads_' + d; }
 function getDayData(d) {
-  const s = localStorage.getItem(dayKey(d));
-  if (s) return JSON.parse(s);
   const out = { vendors: {}, rubros: {} };
   VENDORS.forEach(v => { out.vendors[v] = {}; VCOLS.forEach(c => out.vendors[v][c] = 0); });
   RUBRO_NAMES.forEach(r => { out.rubros[r] = {}; VENDORS.forEach(v => out.rubros[r][v] = 0); });
+  const s = localStorage.getItem(dayKey(d));
+  if (s) {
+    const stored = JSON.parse(s);
+    VENDORS.forEach(v => {
+      if (stored.vendors && stored.vendors[v]) VCOLS.forEach(c => { out.vendors[v][c] = stored.vendors[v][c] || 0; });
+    });
+    RUBRO_NAMES.forEach(r => {
+      if (stored.rubros && stored.rubros[r]) VENDORS.forEach(v => { out.rubros[r][v] = stored.rubros[r][v] || 0; });
+    });
+  }
   return out;
 }
 function saveDayData(d, data) { localStorage.setItem(dayKey(d), JSON.stringify(data)); }

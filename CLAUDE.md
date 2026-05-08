@@ -102,10 +102,11 @@ Los datos se almacenan **por día**. Cada día tiene:
   vendors: {
     Sabrina:  { prospectos, instagram, showroom, respondidos, interes, citas, cierres },
     Tahiruma: { ... },
-    Paola:    { ... }
+    Paola:    { ... },
+    Miriam:   { ... }
   },
   rubros: {
-    "Diseño de Interiores": { Sabrina, Tahiruma, Paola },
+    "Diseño de Interiores": { Sabrina, Tahiruma, Paola, Miriam },
     "Iluminación": { ... },
     "Papel Tapiz": { ... },
     "Domótica": { ... },
@@ -117,7 +118,7 @@ Los datos se almacenan **por día**. Cada día tiene:
 }
 ```
 
-**Vendedoras:** `['Sabrina', 'Tahiruma', 'Paola']`
+**Vendedoras:** `['Sabrina', 'Tahiruma', 'Paola', 'Miriam']`
 **Columnas por vendedora:** `['prospectos', 'instagram', 'showroom', 'respondidos', 'interes', 'citas', 'cierres']`
 **Rubros:** `['Diseño de Interiores', 'Iluminación', 'Papel Tapiz', 'Domótica', 'Mobiliario', 'Sonido', 'Propiedades', 'Otros']`
 
@@ -132,8 +133,8 @@ Los datos se almacenan **por día**. Cada día tiene:
 ### UI
 
 - **Selector de fecha** con flechas y `<input type="date">`
-- **Tabla de vendedoras** — filas Sabrina/Tahiruma/Paola, columnas editables, fila TOTAL automática
-- **Tabla de rubros** — filas por rubro, columnas Sabrina/Tahiruma/Paola, columna TOTAL por fila
+- **Tabla de vendedoras** — filas Sabrina/Tahiruma/Paola/Miriam, columnas editables, fila TOTAL automática
+- **Tabla de rubros** — filas por rubro, columnas Sabrina/Tahiruma/Paola/Miriam, columna TOTAL por fila
 - **Resumen semanal** — 9 tarjetas con selector de semana (flechas izq/der). Incluye totales + rubro top + vendedora top (basada en citas+cierres) + tasa de respuesta
 - **Resumen mensual** — 9 tarjetas con selector de mes (flechas izq/der). Similar al semanal + tasa de cierre
 - **Botón "Limpiar día actual"** — borra local y Airtable
@@ -147,7 +148,7 @@ Los datos se almacenan **por día**. Cada día tiene:
 | `onVendorInput(el)` | Guarda input de vendedora, actualiza totales sin re-renderizar |
 | `onRubroInput(el)` | Guarda input de rubro, actualiza total de fila |
 | `scheduleSave(date)` | Debounce de 2s y llama `saveToAirtable` |
-| `saveToAirtable(date)` | Lista registros del día, hace upsert de 3 vendedoras + 8 rubros |
+| `saveToAirtable(date)` | Lista registros del día, hace upsert de 4 vendedoras + 8 rubros |
 | `loadFromAirtable(date)` | Consulta Airtable y devuelve estructura `{vendors, rubros}` |
 | `aggregateDays(dates)` | Suma totales + calcula top rubro/vendedora/tasas |
 | `renderSummaries()` | Pinta resumen semanal y mensual |
@@ -176,7 +177,7 @@ Esto evita el bug común donde el re-render destruye el input activo y se pierde
 | Columna | Tipo |
 |---|---|
 | Fecha | Date |
-| Vendedora | Single select (Sabrina, Tahiruma, Paola) |
+| Vendedora | Single select (Sabrina, Tahiruma, Paola, Miriam) |
 | Prospectos Totales | Number |
 | Instagram | Number |
 | Showroom | Number |
@@ -194,6 +195,7 @@ Esto evita el bug común donde el re-render destruye el input activo y se pierde
 | Sabrina | Number |
 | Tahiruma | Number |
 | Paola | Number |
+| Miriam | Number |
 
 ### Mapeo de nombres
 
