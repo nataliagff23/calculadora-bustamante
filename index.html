@@ -444,7 +444,14 @@ const VCOLS = ['prospectos','instagram','showroom','respondidos','interes','cita
 const RUBRO_NAMES = ['Diseño de Interiores','Iluminación','Papel Tapiz','Domótica','Mobiliario','Sonido','Propiedades','Otros'];
 const DAYS_ES = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
 
-let currentDate = new Date().toISOString().slice(0,10);
+// Fecha actual en zona horaria de Venezuela (America/Caracas, UTC-4)
+function todayCaracas() {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Caracas',
+    year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(new Date());
+}
+let currentDate = todayCaracas();
 let saveTimer = null;
 let pendingSaveDate = null;
 let saveInFlight = false;
