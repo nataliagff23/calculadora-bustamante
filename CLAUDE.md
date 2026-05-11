@@ -103,10 +103,10 @@ Los datos se almacenan **por día**. Cada día tiene:
     Sabrina:  { prospectos, instagram, showroom, respondidos, interes, citas, cierres },
     Tahiruma: { ... },
     Paola:    { ... },
-    Miriam:   { ... }
+    Mariam:   { ... }
   },
   rubros: {
-    "Diseño de Interiores": { Sabrina, Tahiruma, Paola, Miriam },
+    "Diseño de Interiores": { Sabrina, Tahiruma, Paola, Mariam },
     "Iluminación": { ... },
     "Papel Tapiz": { ... },
     "Domótica": { ... },
@@ -118,7 +118,7 @@ Los datos se almacenan **por día**. Cada día tiene:
 }
 ```
 
-**Vendedoras:** `['Sabrina', 'Tahiruma', 'Paola', 'Miriam']`
+**Vendedoras:** `['Sabrina', 'Tahiruma', 'Paola', 'Mariam']`
 **Columnas por vendedora:** `['prospectos', 'instagram', 'showroom', 'respondidos', 'interes', 'citas', 'cierres']`
 **Rubros:** `['Diseño de Interiores', 'Iluminación', 'Papel Tapiz', 'Domótica', 'Mobiliario', 'Sonido', 'Propiedades', 'Otros']`
 
@@ -133,8 +133,8 @@ Los datos se almacenan **por día**. Cada día tiene:
 ### UI
 
 - **Selector de fecha** con flechas y `<input type="date">`
-- **Tabla de vendedoras** — filas Sabrina/Tahiruma/Paola/Miriam, columnas editables, fila TOTAL automática
-- **Tabla de rubros** — filas por rubro, columnas Sabrina/Tahiruma/Paola/Miriam, columna TOTAL por fila
+- **Tabla de vendedoras** — filas Sabrina/Tahiruma/Paola/Mariam, columnas editables, fila TOTAL automática
+- **Tabla de rubros** — filas por rubro, columnas Sabrina/Tahiruma/Paola/Mariam, columna TOTAL por fila
 - **Resumen semanal** — 9 tarjetas con selector de semana (flechas izq/der). Incluye totales + rubro top + vendedora top (basada en citas+cierres) + tasa de respuesta
 - **Resumen mensual** — 9 tarjetas con selector de mes (flechas izq/der). Similar al semanal + tasa de cierre
 - **Botón "Limpiar día actual"** — borra local y Airtable
@@ -177,7 +177,7 @@ Esto evita el bug común donde el re-render destruye el input activo y se pierde
 | Columna | Tipo |
 |---|---|
 | Fecha | Date |
-| Vendedora | Single select (Sabrina, Tahiruma, Paola, Miriam) |
+| Vendedora | Single select (Sabrina, Tahiruma, Paola, Mariam) |
 | Prospectos Totales | Number |
 | Instagram | Number |
 | Showroom | Number |
@@ -195,7 +195,7 @@ Esto evita el bug común donde el re-render destruye el input activo y se pierde
 | Sabrina | Number |
 | Tahiruma | Number |
 | Paola | Number |
-| Miriam | Number |
+| Mariam | Number |
 
 ### Mapeo de nombres
 
