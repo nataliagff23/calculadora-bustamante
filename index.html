@@ -303,7 +303,7 @@
         <div class="section-label">Fecha del día</div>
         <div class="date-nav">
           <button class="nav-btn" onclick="moveDay(-1)">&#8592;</button>
-          <input type="date" id="ctrlDate" onchange="loadDay()">
+          <input type="date" id="ctrlDate" onchange="flushPendingSave().then(loadDay)">
           <button class="nav-btn" onclick="moveDay(1)">&#8594;</button>
           <span style="font-size:13px;color:var(--text-secondary)" id="ctrlDayName"></span>
           <span style="font-size:12px;margin-left:auto;font-weight:500" id="syncStatus"></span>
@@ -446,6 +446,9 @@ const DAYS_ES = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sá
 
 let currentDate = new Date().toISOString().slice(0,10);
 let saveTimer = null;
+let pendingSaveDate = null;
+let saveInFlight = false;
+let retryTimer = null;
 
 // ══════════════════════════════════════
 // AIRTABLE (via proxy serverless en Vercel)
@@ -466,7 +469,12 @@ const FIELD_MAP_VENDOR = {
 
 async function apiCall(body) {
   try {
-    const r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const r = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      keepalive: true
+    });
     const json = await r.json();
     if (json.error) {
       console.error('API error:', body.op, body.table, json.error);
@@ -497,9 +505,20 @@ function setSyncStatus(text, color) {
   if (el) { el.textContent = text; el.style.color = color || 'var(--text-secondary)'; }
 }
 
+function upsertOk(result) { return !!(result && result.id && !result.error); }
+
 async function saveToAirtable(dateStr) {
+  if (saveInFlight) {
+    // Otro save corriendo: reprograma para que no se pisen
+    pendingSaveDate = dateStr;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => flushPendingSave(), 500);
+    return false;
+  }
+  saveInFlight = true;
   setSyncStatus('⟳ Guardando...', '#0C447C');
   const data = getDayData(dateStr);
+  let failures = 0;
 
   // Primero listar para saber qué ya existe
   const [vendorsList, rubrosList] = await Promise.all([
@@ -507,16 +526,19 @@ async function saveToAirtable(dateStr) {
     airtableList(AIRTABLE_TBL_RUBROS, dateStr)
   ]);
 
-  if (vendorsList && vendorsList.records) {
-    vendorsList.records.forEach(r => {
-      recordCache.vendors[cacheKey(dateStr, r.fields.Vendedora)] = r.id;
-    });
+  if (!vendorsList || !rubrosList || vendorsList.error || rubrosList.error) {
+    saveInFlight = false;
+    setSyncStatus('❌ Sin conexión — reintentando', '#c0392b');
+    scheduleRetry(dateStr);
+    return false;
   }
-  if (rubrosList && rubrosList.records) {
-    rubrosList.records.forEach(r => {
-      recordCache.rubros[cacheKey(dateStr, r.fields.Rubro)] = r.id;
-    });
-  }
+
+  vendorsList.records.forEach(r => {
+    recordCache.vendors[cacheKey(dateStr, r.fields.Vendedora)] = r.id;
+  });
+  rubrosList.records.forEach(r => {
+    recordCache.rubros[cacheKey(dateStr, r.fields.Rubro)] = r.id;
+  });
 
   // Guardar vendedoras
   for (const v of VENDORS) {
@@ -525,7 +547,8 @@ async function saveToAirtable(dateStr) {
     VCOLS.forEach(c => { fields[FIELD_MAP_VENDOR[c]] = vd[c] || 0; });
     const id = recordCache.vendors[cacheKey(dateStr, v)];
     const result = await airtableUpsert(AIRTABLE_TBL_VENDORS, id, fields);
-    if (result && result.id) recordCache.vendors[cacheKey(dateStr, v)] = result.id;
+    if (upsertOk(result)) recordCache.vendors[cacheKey(dateStr, v)] = result.id;
+    else failures++;
   }
 
   // Guardar rubros
@@ -535,10 +558,27 @@ async function saveToAirtable(dateStr) {
     VENDORS.forEach(v => { fields[v] = rd[v] || 0; });
     const id = recordCache.rubros[cacheKey(dateStr, r)];
     const result = await airtableUpsert(AIRTABLE_TBL_RUBROS, id, fields);
-    if (result && result.id) recordCache.rubros[cacheKey(dateStr, r)] = result.id;
+    if (upsertOk(result)) recordCache.rubros[cacheKey(dateStr, r)] = result.id;
+    else failures++;
   }
+
+  saveInFlight = false;
+
+  if (failures > 0) {
+    setSyncStatus(`❌ ${failures} registro(s) no se guardaron — reintentando`, '#c0392b');
+    scheduleRetry(dateStr);
+    return false;
+  }
+
   setSyncStatus('✓ Guardado', '#1D9E75');
-  setTimeout(() => setSyncStatus(''), 3000);
+  setTimeout(() => { if (document.getElementById('syncStatus').textContent === '✓ Guardado') setSyncStatus(''); }, 3000);
+  return true;
+}
+
+function scheduleRetry(dateStr) {
+  clearTimeout(retryTimer);
+  pendingSaveDate = dateStr;
+  retryTimer = setTimeout(() => flushPendingSave(), 5000);
 }
 
 async function loadFromAirtable(dateStr) {
@@ -574,8 +614,29 @@ async function loadFromAirtable(dateStr) {
 
 function scheduleSave(dateStr) {
   clearTimeout(saveTimer);
-  const dateCopy = dateStr;
-  saveTimer = setTimeout(() => { saveToAirtable(dateCopy); }, 2000);
+  clearTimeout(retryTimer);
+  pendingSaveDate = dateStr;
+  saveTimer = setTimeout(() => { flushPendingSave(); }, 2000);
+}
+
+function flushPendingSave() {
+  if (!pendingSaveDate) return Promise.resolve(true);
+  clearTimeout(saveTimer);
+  clearTimeout(retryTimer);
+  const date = pendingSaveDate;
+  pendingSaveDate = null;
+  return saveToAirtable(date);
+}
+
+function hasAnyData(data) {
+  for (const v of VENDORS) {
+    for (const c of VCOLS) if ((data.vendors[v] && data.vendors[v][c]) > 0) return true;
+  }
+  for (const r of RUBRO_NAMES) {
+    if (!data.rubros[r]) continue;
+    for (const v of VENDORS) if ((data.rubros[r][v] || 0) > 0) return true;
+  }
+  return false;
 }
 
 // ── LocalStorage helpers ──
@@ -598,7 +659,8 @@ function getDayData(d) {
 }
 function saveDayData(d, data) { localStorage.setItem(dayKey(d), JSON.stringify(data)); }
 
-function moveDay(dir) {
+async function moveDay(dir) {
+  await flushPendingSave();
   const d = new Date(currentDate + 'T12:00:00');
   d.setDate(d.getDate() + dir);
   currentDate = d.toISOString().slice(0,10);
@@ -625,15 +687,37 @@ function loadDay() {
   loadFromAirtable(currentDate).then(data => {
     if (dateAtLoad !== currentDate) return; // el usuario cambió de día
     if (data) {
-      // Airtable tiene datos: usar esos
+      // Airtable tiene datos
+      const local = getDayData(dateAtLoad);
+      const localHas = hasAnyData(local);
+      // Si hay datos locales con cambios pendientes para esta fecha, NO sobrescribir
+      if (pendingSaveDate === dateAtLoad && localHas) {
+        flushPendingSave();
+        return;
+      }
       saveDayData(dateAtLoad, data);
-      renderDayUI(data);
+      // Solo re-render si el usuario no está editando en este día
+      if (!isUserEditingCurrentDay()) renderDayUI(data);
+      else renderSummaries();
     } else {
-      // Airtable vacío: limpiar caché local y mostrar en blanco
-      localStorage.removeItem(dayKey(dateAtLoad));
-      renderDayUI(getDayData(dateAtLoad));
+      // Airtable vacío
+      const local = getDayData(dateAtLoad);
+      if (hasAnyData(local)) {
+        // Hay datos locales que nunca llegaron a Airtable → recuperar subiéndolos
+        console.warn('Recuperando datos locales no sincronizados para', dateAtLoad);
+        setSyncStatus('⟳ Recuperando datos locales...', '#0C447C');
+        pendingSaveDate = dateAtLoad;
+        flushPendingSave();
+      }
+      // NO borrar localStorage; mantener lo que haya
     }
   }).catch(() => {});
+}
+
+function isUserEditingCurrentDay() {
+  const el = document.activeElement;
+  if (!el || el.tagName !== 'INPUT') return false;
+  return el.classList && el.classList.contains('ctrl-input');
 }
 
 function renderDayUI(data) {
@@ -851,6 +935,22 @@ function renderSummaries() {
 
 // Init date
 document.getElementById('ctrlDate').value = currentDate;
+
+// Flush pendiente al cerrar/refresh y al cambiar de tab
+window.addEventListener('beforeunload', (e) => {
+  if (pendingSaveDate) {
+    flushPendingSave(); // keepalive en apiCall permite que la request sobreviva al cierre
+    e.preventDefault();
+    e.returnValue = 'Hay cambios guardándose. ¿Cerrar de todas formas?';
+    return e.returnValue;
+  }
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden' && pendingSaveDate) {
+    flushPendingSave();
+  }
+});
 </script>
 </body>
 </html>
