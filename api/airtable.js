@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Missing AIRTABLE_KEY or AIRTABLE_BASE env vars' });
   }
 
-  const { op, table, date, recordId, fields } = req.method === 'POST' ? req.body : req.query;
+  const { op, table, date, dateStart, dateEnd, recordId, fields } = req.method === 'POST' ? req.body : req.query;
 
   const headers = {
     'Authorization': 'Bearer ' + AIRTABLE_KEY,
@@ -18,11 +18,26 @@ export default async function handler(req, res) {
 
   try {
     if (op === 'list') {
-      const formula = `DATESTR({Fecha})='${date}'`;
-      const url = `https://api.airtable.com/v0/${AIRTABLE_BASE}/${encodeURIComponent(table)}?filterByFormula=${encodeURIComponent(formula)}`;
-      const r = await fetch(url, { headers });
-      const json = await r.json();
-      return res.status(r.status).json(json);
+      let formula;
+      if (date) {
+        formula = `DATESTR({Fecha})='${date}'`;
+      } else if (dateStart && dateEnd) {
+        formula = `AND(DATESTR({Fecha})>='${dateStart}',DATESTR({Fecha})<='${dateEnd}')`;
+      } else {
+        return res.status(400).json({ error: 'Missing date or dateStart/dateEnd' });
+      }
+      const base = `https://api.airtable.com/v0/${AIRTABLE_BASE}/${encodeURIComponent(table)}?filterByFormula=${encodeURIComponent(formula)}&pageSize=100`;
+      const records = [];
+      let offset;
+      do {
+        const url = base + (offset ? `&offset=${encodeURIComponent(offset)}` : '');
+        const r = await fetch(url, { headers });
+        const json = await r.json();
+        if (!r.ok || json.error) return res.status(r.status).json(json);
+        if (json.records) records.push(...json.records);
+        offset = json.offset;
+      } while (offset);
+      return res.status(200).json({ records });
     }
 
     if (op === 'upsert') {
