@@ -316,7 +316,7 @@
         <div class="table-wrap">
           <table id="vendorTable">
             <thead><tr>
-              <th>Vendedora</th><th>Prospectos</th><th>Instagram</th><th>Showroom</th><th>Respondidos</th><th>Interés alto</th><th>Citas</th><th>Cierres</th>
+              <th>Vendedora</th><th>Prospectos</th><th>Instagram</th><th>WhatsApp</th><th>Showroom</th><th>Respondidos</th><th>Interés alto</th><th>Citas</th><th>Cierres</th>
             </tr></thead>
             <tbody id="vendorBody"></tbody>
           </table>
@@ -460,7 +460,7 @@ render();
    CONTROL DE LEADS
    ═══════════════════════════════════════ */
 const VENDORS = ['Sabrina','Tahiruma','Paola','Mariam'];
-const VCOLS = ['prospectos','instagram','showroom','respondidos','interes','citas','cierres'];
+const VCOLS = ['prospectos','instagram','whatsapp','showroom','respondidos','interes','citas','cierres'];
 const RUBRO_NAMES = ['Diseño de Interiores','Iluminación','Papel Tapiz','Domótica','Mobiliario','Sonido','Propiedades','Otros'];
 const DAYS_ES = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
 
@@ -487,6 +487,7 @@ const API_URL = '/api/airtable';
 const FIELD_MAP_VENDOR = {
   prospectos: 'Prospectos Totales',
   instagram: 'Instagram',
+  whatsapp: 'WhatsApp',
   showroom: 'Showroom',
   respondidos: 'Respondidos',
   interes: 'Interés Alto',
@@ -574,8 +575,8 @@ async function saveToAirtable(dateStr) {
   // Guardar vendedoras
   for (const v of VENDORS) {
     const vd = data.vendors[v];
-    // Prospectos = Instagram + Showroom (regla del negocio, se fuerza al guardar)
-    vd.prospectos = (vd.instagram || 0) + (vd.showroom || 0);
+    // Prospectos = Instagram + WhatsApp + Showroom (regla del negocio, se fuerza al guardar)
+    vd.prospectos = (vd.instagram || 0) + (vd.whatsapp || 0) + (vd.showroom || 0);
     const fields = { Fecha: dateStr, Vendedora: v };
     VCOLS.forEach(c => { fields[FIELD_MAP_VENDOR[c]] = vd[c] || 0; });
     const id = recordCache.vendors[cacheKey(dateStr, v)];
@@ -629,8 +630,8 @@ async function loadFromAirtable(dateStr) {
     const v = r.fields.Vendedora;
     if (!data.vendors[v]) return;
     VCOLS.forEach(c => { data.vendors[v][c] = Number(r.fields[FIELD_MAP_VENDOR[c]]) || 0; });
-    // Prospectos = Instagram + Showroom (sobrescribe cualquier valor histórico)
-    data.vendors[v].prospectos = (data.vendors[v].instagram || 0) + (data.vendors[v].showroom || 0);
+    // Prospectos = Instagram + WhatsApp + Showroom (sobrescribe cualquier valor histórico)
+    data.vendors[v].prospectos = (data.vendors[v].instagram || 0) + (data.vendors[v].whatsapp || 0) + (data.vendors[v].showroom || 0);
     recordCache.vendors[cacheKey(dateStr, v)] = r.id;
   });
 
@@ -758,15 +759,16 @@ function isUserEditingCurrentDay() {
 }
 
 function renderDayUI(data) {
-  // Vendor table — Prospectos es calculado (Instagram + Showroom), no editable
+  // Vendor table — Prospectos es calculado (Instagram + WhatsApp + Showroom), no editable
   let vh = '';
   VENDORS.forEach(v => {
     vh += `<tr><td style="font-weight:600">${v}</td>`;
     VCOLS.forEach(c => {
       if (c === 'prospectos') {
         const ig = data.vendors[v].instagram || 0;
+        const wa = data.vendors[v].whatsapp || 0;
         const sh = data.vendors[v].showroom || 0;
-        vh += `<td class="total-cell vp-${v}" title="Instagram + Showroom">${ig + sh}</td>`;
+        vh += `<td class="total-cell vp-${v}" title="Instagram + WhatsApp + Showroom">${ig + wa + sh}</td>`;
       } else {
         const val = data.vendors[v][c] || 0;
         vh += `<td><input class="ctrl-input" type="number" value="${val}" min="0" data-vendor="${v}" data-col="${c}" oninput="onVendorInput(this)"></td>`;
@@ -778,7 +780,7 @@ function renderDayUI(data) {
   VCOLS.forEach(c => {
     let t;
     if (c === 'prospectos') {
-      t = VENDORS.reduce((s,v) => s + ((data.vendors[v].instagram||0) + (data.vendors[v].showroom||0)), 0);
+      t = VENDORS.reduce((s,v) => s + ((data.vendors[v].instagram||0) + (data.vendors[v].whatsapp||0) + (data.vendors[v].showroom||0)), 0);
     } else {
       t = VENDORS.reduce((s,v) => s + (data.vendors[v][c]||0), 0);
     }
@@ -809,9 +811,9 @@ function onVendorInput(el) {
   const data = getDayData(currentDate);
   data.vendors[v][c] = val;
 
-  // Prospectos = Instagram + Showroom (recalcular automáticamente)
-  if (c === 'instagram' || c === 'showroom') {
-    data.vendors[v].prospectos = (data.vendors[v].instagram || 0) + (data.vendors[v].showroom || 0);
+  // Prospectos = Instagram + WhatsApp + Showroom (recalcular automáticamente)
+  if (c === 'instagram' || c === 'whatsapp' || c === 'showroom') {
+    data.vendors[v].prospectos = (data.vendors[v].instagram || 0) + (data.vendors[v].whatsapp || 0) + (data.vendors[v].showroom || 0);
     const pcell = document.querySelector(`.vp-${v}`);
     if (pcell) pcell.textContent = data.vendors[v].prospectos;
   }
@@ -923,7 +925,7 @@ function aggregateDays(dates) {
   const rubroTotals = {}; RUBRO_NAMES.forEach(r => rubroTotals[r] = 0);
   const vendorBreakdown = {};
   VENDORS.forEach(v => {
-    vendorBreakdown[v] = { prospectos: 0, instagram: 0, showroom: 0, respondidos: 0, interes: 0, citas: 0, cierres: 0 };
+    vendorBreakdown[v] = { prospectos: 0, instagram: 0, whatsapp: 0, showroom: 0, respondidos: 0, interes: 0, citas: 0, cierres: 0 };
   });
   const dailyByVendor = {}; // { 'YYYY-MM-DD': { Sabrina: prospectos, Tahiruma: ... } }
   let daysWithData = 0, bestDay = '', bestDayVal = 0;
@@ -935,8 +937,9 @@ function aggregateDays(dates) {
     dailyByVendor[dt] = {};
     VENDORS.forEach(v => {
       const ig = data.vendors[v].instagram || 0;
+      const wa = data.vendors[v].whatsapp || 0;
       const sh = data.vendors[v].showroom || 0;
-      const prospectos = ig + sh; // Prospectos = Instagram + Showroom (regla de negocio)
+      const prospectos = ig + wa + sh; // Prospectos = Instagram + WhatsApp + Showroom (regla de negocio)
       const resp = data.vendors[v].respondidos || 0;
       const inter = data.vendors[v].interes || 0;
       const citas = data.vendors[v].citas || 0;
@@ -944,6 +947,7 @@ function aggregateDays(dates) {
 
       totals.prospectos += prospectos;
       totals.instagram += ig;
+      totals.whatsapp += wa;
       totals.showroom += sh;
       totals.respondidos += resp;
       totals.interes += inter;
@@ -952,6 +956,7 @@ function aggregateDays(dates) {
 
       vendorBreakdown[v].prospectos += prospectos;
       vendorBreakdown[v].instagram += ig;
+      vendorBreakdown[v].whatsapp += wa;
       vendorBreakdown[v].showroom += sh;
       vendorBreakdown[v].respondidos += resp;
       vendorBreakdown[v].interes += inter;
@@ -1086,8 +1091,9 @@ function renderSummaries() {
   const w = aggregateDays(weekDates);
   document.getElementById('weekLabel').textContent = formatWeekLabel(selectedWeekStart);
   document.getElementById('weekMetrics').innerHTML = `
-    <div class="cm-card"><div class="cm-val">${w.totals.prospectos}</div><div class="cm-lbl">Prospectos (IG + Showroom)</div></div>
+    <div class="cm-card"><div class="cm-val">${w.totals.prospectos}</div><div class="cm-lbl">Prospectos (IG + WA + Showroom)</div></div>
     <div class="cm-card"><div class="cm-val">${w.totals.instagram}</div><div class="cm-lbl">Instagram</div></div>
+    <div class="cm-card"><div class="cm-val">${w.totals.whatsapp}</div><div class="cm-lbl">WhatsApp</div></div>
     <div class="cm-card"><div class="cm-val">${w.totals.showroom}</div><div class="cm-lbl">Showroom</div></div>
     <div class="cm-card"><div class="cm-val">${w.totals.respondidos}</div><div class="cm-lbl">Respondidos</div></div>
     <div class="cm-card"><div class="cm-val">${w.totals.citas}</div><div class="cm-lbl">Citas</div></div>
@@ -1107,8 +1113,9 @@ function renderSummaries() {
   const monthName = md.toLocaleDateString('es', { month: 'long', year: 'numeric' });
   document.getElementById('monthLabel').textContent = monthName;
   document.getElementById('monthMetrics').innerHTML = `
-    <div class="cm-card"><div class="cm-val">${m.totals.prospectos}</div><div class="cm-lbl">Prospectos (IG + Showroom)</div><div class="cm-det">${monthName}</div></div>
+    <div class="cm-card"><div class="cm-val">${m.totals.prospectos}</div><div class="cm-lbl">Prospectos (IG + WA + Showroom)</div><div class="cm-det">${monthName}</div></div>
     <div class="cm-card"><div class="cm-val">${m.totals.instagram}</div><div class="cm-lbl">Instagram</div></div>
+    <div class="cm-card"><div class="cm-val">${m.totals.whatsapp}</div><div class="cm-lbl">WhatsApp</div></div>
     <div class="cm-card"><div class="cm-val">${m.totals.showroom}</div><div class="cm-lbl">Showroom</div></div>
     <div class="cm-card"><div class="cm-val">${m.totals.respondidos}</div><div class="cm-lbl">Respondidos</div></div>
     <div class="cm-card"><div class="cm-val">${m.totals.citas}</div><div class="cm-lbl">Citas</div></div>
@@ -1169,8 +1176,8 @@ async function prefetchSummaryRange() {
     if (!VENDORS.includes(v)) return;
     const day = ensureDay(dt);
     VCOLS.forEach(c => { day.vendors[v][c] = Number(r.fields[FIELD_MAP_VENDOR[c]]) || 0; });
-    // Asegurar consistencia: Prospectos = Instagram + Showroom
-    day.vendors[v].prospectos = (day.vendors[v].instagram || 0) + (day.vendors[v].showroom || 0);
+    // Asegurar consistencia: Prospectos = Instagram + WhatsApp + Showroom
+    day.vendors[v].prospectos = (day.vendors[v].instagram || 0) + (day.vendors[v].whatsapp || 0) + (day.vendors[v].showroom || 0);
     recordCache.vendors[cacheKey(dt, v)] = r.id;
   });
 
