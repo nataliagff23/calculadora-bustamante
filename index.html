@@ -316,7 +316,7 @@
         <div class="table-wrap">
           <table id="vendorTable">
             <thead><tr>
-              <th>Vendedora</th><th>Prospectos</th><th>Instagram</th><th>WhatsApp</th><th>Showroom</th><th>Respondidos</th><th>Interés alto</th><th>Citas</th><th>Cierres</th>
+              <th>Vendedora</th><th>Prospectos Totales</th><th>Instagram</th><th>WhatsApp</th><th>Showroom</th><th>Respondidos</th><th>Interés alto</th><th>Citas</th><th>Cierres</th>
             </tr></thead>
             <tbody id="vendorBody"></tbody>
           </table>
@@ -1091,7 +1091,7 @@ function renderSummaries() {
   const w = aggregateDays(weekDates);
   document.getElementById('weekLabel').textContent = formatWeekLabel(selectedWeekStart);
   document.getElementById('weekMetrics').innerHTML = `
-    <div class="cm-card"><div class="cm-val">${w.totals.prospectos}</div><div class="cm-lbl">Prospectos (IG + WA + Showroom)</div></div>
+    <div class="cm-card"><div class="cm-val">${w.totals.prospectos}</div><div class="cm-lbl">Prospectos Totales (IG + WA + Showroom)</div></div>
     <div class="cm-card"><div class="cm-val">${w.totals.instagram}</div><div class="cm-lbl">Instagram</div></div>
     <div class="cm-card"><div class="cm-val">${w.totals.whatsapp}</div><div class="cm-lbl">WhatsApp</div></div>
     <div class="cm-card"><div class="cm-val">${w.totals.showroom}</div><div class="cm-lbl">Showroom</div></div>
@@ -1113,7 +1113,7 @@ function renderSummaries() {
   const monthName = md.toLocaleDateString('es', { month: 'long', year: 'numeric' });
   document.getElementById('monthLabel').textContent = monthName;
   document.getElementById('monthMetrics').innerHTML = `
-    <div class="cm-card"><div class="cm-val">${m.totals.prospectos}</div><div class="cm-lbl">Prospectos (IG + WA + Showroom)</div><div class="cm-det">${monthName}</div></div>
+    <div class="cm-card"><div class="cm-val">${m.totals.prospectos}</div><div class="cm-lbl">Prospectos Totales (IG + WA + Showroom)</div><div class="cm-det">${monthName}</div></div>
     <div class="cm-card"><div class="cm-val">${m.totals.instagram}</div><div class="cm-lbl">Instagram</div></div>
     <div class="cm-card"><div class="cm-val">${m.totals.whatsapp}</div><div class="cm-lbl">WhatsApp</div></div>
     <div class="cm-card"><div class="cm-val">${m.totals.showroom}</div><div class="cm-lbl">Showroom</div></div>
