@@ -17,6 +17,15 @@ export default async function handler(req, res) {
   };
 
   try {
+    if (op === 'whoami') {
+      // Diagnóstico: devuelve el ID del base configurado (no expone el key)
+      return res.status(200).json({
+        base: AIRTABLE_BASE,
+        keyPrefix: AIRTABLE_KEY ? AIRTABLE_KEY.slice(0, 6) : null,
+        keyLength: AIRTABLE_KEY ? AIRTABLE_KEY.length : 0
+      });
+    }
+
     if (op === 'list') {
       let formula;
       if (date) {
