@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Missing AIRTABLE_KEY or AIRTABLE_BASE env vars' });
   }
 
-  const { op, table, date, dateStart, dateEnd, recordId, fields } = req.method === 'POST' ? req.body : req.query;
+  const { op, table, date, dateStart, dateEnd, recordId, fields, records, mergeOn } = req.method === 'POST' ? req.body : req.query;
 
   const headers = {
     'Authorization': 'Bearer ' + AIRTABLE_KEY,
@@ -47,6 +47,22 @@ export default async function handler(req, res) {
         offset = json.offset;
       } while (offset);
       return res.status(200).json({ records });
+    }
+
+    if (op === 'batchUpsert') {
+      // Upsert masivo: hasta 10 records en 1 sola llamada usando performUpsert
+      const url = `https://api.airtable.com/v0/${AIRTABLE_BASE}/${encodeURIComponent(table)}`;
+      const r = await fetch(url, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({
+          records,
+          performUpsert: { fieldsToMergeOn: mergeOn },
+          typecast: true
+        })
+      });
+      const json = await r.json();
+      return res.status(r.status).json(json);
     }
 
     if (op === 'upsert') {

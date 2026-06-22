@@ -528,6 +528,10 @@ async function airtableUpsert(table, recordId, fields) {
   return apiCall({ op: 'upsert', table, recordId, fields });
 }
 
+async function airtableBatchUpsert(table, records, mergeOn) {
+  return apiCall({ op: 'batchUpsert', table, records, mergeOn });
+}
+
 // Cache de record IDs para no tener que buscar cada vez
 const recordCache = { vendors: {}, rubros: {} };
 function cacheKey(dateStr, name) { return dateStr + '|' + name; }
@@ -550,59 +554,56 @@ async function saveToAirtable(dateStr) {
   saveInFlight = true;
   setSyncStatus('⟳ Guardando...', '#0C447C');
   const data = getDayData(dateStr);
-  let failures = 0;
 
-  // Primero listar para saber qué ya existe
-  const [vendorsList, rubrosList] = await Promise.all([
-    airtableList(AIRTABLE_TBL_VENDORS, dateStr),
-    airtableList(AIRTABLE_TBL_RUBROS, dateStr)
-  ]);
-
-  if (!vendorsList || !rubrosList || vendorsList.error || rubrosList.error) {
-    saveInFlight = false;
-    setSyncStatus('❌ Sin conexión — reintentando', '#c0392b');
-    scheduleRetry(dateStr);
-    return false;
-  }
-
-  vendorsList.records.forEach(r => {
-    recordCache.vendors[cacheKey(dateStr, r.fields.Vendedora)] = r.id;
-  });
-  rubrosList.records.forEach(r => {
-    recordCache.rubros[cacheKey(dateStr, r.fields.Rubro)] = r.id;
-  });
-
-  // Guardar vendedoras
-  for (const v of VENDORS) {
+  // Construir los 4 records de vendedoras
+  const vendorRecords = VENDORS.map(v => {
     const vd = data.vendors[v];
-    // Prospectos = Instagram + WhatsApp + Showroom (regla del negocio, se fuerza al guardar)
+    // Prospectos = Instagram + WhatsApp + Showroom (regla del negocio)
     vd.prospectos = (vd.instagram || 0) + (vd.whatsapp || 0) + (vd.showroom || 0);
     const fields = { Fecha: dateStr, Vendedora: v };
     VCOLS.forEach(c => { fields[FIELD_MAP_VENDOR[c]] = vd[c] || 0; });
-    const id = recordCache.vendors[cacheKey(dateStr, v)];
-    const result = await airtableUpsert(AIRTABLE_TBL_VENDORS, id, fields);
-    if (upsertOk(result)) recordCache.vendors[cacheKey(dateStr, v)] = result.id;
-    else failures++;
-  }
+    return { fields };
+  });
 
-  // Guardar rubros
-  for (const r of RUBRO_NAMES) {
-    const rd = data.rubros[r] || {};
-    const fields = { Fecha: dateStr, Rubro: r };
+  // Construir los 8 records de rubros
+  const rubroRecords = RUBRO_NAMES.map(rn => {
+    const rd = data.rubros[rn] || {};
+    const fields = { Fecha: dateStr, Rubro: rn };
     VENDORS.forEach(v => { fields[v] = rd[v] || 0; });
-    const id = recordCache.rubros[cacheKey(dateStr, r)];
-    const result = await airtableUpsert(AIRTABLE_TBL_RUBROS, id, fields);
-    if (upsertOk(result)) recordCache.rubros[cacheKey(dateStr, r)] = result.id;
-    else failures++;
-  }
+    return { fields };
+  });
+
+  // Solo 2 llamadas a Airtable en total (antes eran ~14)
+  const [vRes, rRes] = await Promise.all([
+    airtableBatchUpsert(AIRTABLE_TBL_VENDORS, vendorRecords, ['Fecha', 'Vendedora']),
+    airtableBatchUpsert(AIRTABLE_TBL_RUBROS, rubroRecords, ['Fecha', 'Rubro'])
+  ]);
 
   saveInFlight = false;
 
-  if (failures > 0) {
-    setSyncStatus(`❌ ${failures} registro(s) no se guardaron — reintentando`, '#c0392b');
+  const vOk = vRes && vRes.records && !vRes.error;
+  const rOk = rRes && rRes.records && !rRes.error;
+
+  if (!vOk || !rOk) {
+    const errMsg = (vRes && vRes.error && (vRes.error.message || vRes.error.type)) ||
+                   (rRes && rRes.error && (rRes.error.message || rRes.error.type)) ||
+                   'Sin conexión';
+    setSyncStatus('❌ ' + errMsg + ' — reintentando', '#c0392b');
     scheduleRetry(dateStr);
     return false;
   }
+
+  // Guardar IDs nuevos en el cache (no es estrictamente necesario con performUpsert pero ayuda)
+  vRes.records.forEach(rec => {
+    if (rec.fields && rec.fields.Vendedora) {
+      recordCache.vendors[cacheKey(dateStr, rec.fields.Vendedora)] = rec.id;
+    }
+  });
+  rRes.records.forEach(rec => {
+    if (rec.fields && rec.fields.Rubro) {
+      recordCache.rubros[cacheKey(dateStr, rec.fields.Rubro)] = rec.id;
+    }
+  });
 
   setSyncStatus('✓ Guardado', '#1D9E75');
   setTimeout(() => { if (document.getElementById('syncStatus').textContent === '✓ Guardado') setSyncStatus(''); }, 3000);
