@@ -170,9 +170,9 @@ Esto evita el bug común donde el re-render destruye el input activo y se pierde
 
 ### Base
 - **Nombre:** Bustamante
-- **ID:** `appYVwnHHhRLC8Lge`
+- **ID:** `appC0laa43S7rNjhC`
 
-### Tabla `Vendedoras` (ID: `tblh5X25VzP8xt415`)
+### Tabla `Vendedoras` (ID: `tblA9qwrSJTn63GYb`)
 
 | Columna | Tipo |
 |---|---|
@@ -187,7 +187,7 @@ Esto evita el bug común donde el re-render destruye el input activo y se pierde
 | Citas | Number |
 | Cierres | Number |
 
-### Tabla `Rubros` (ID: `tblA1TzT81RVQExY8`)
+### Tabla `Rubros` (ID: `tbltdJfwYgorPeR8L`)
 
 | Columna | Tipo |
 |---|---|
