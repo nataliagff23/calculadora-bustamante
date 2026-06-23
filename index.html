@@ -310,13 +310,22 @@
         </div>
       </div>
 
+      <!-- Ubicación del día (métrica única, no por vendedora) -->
+      <div class="card">
+        <div class="section-label">Preguntaron por ubicación</div>
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+          <input type="number" id="ubicacionInput" class="ctrl-input" min="0" value="0" oninput="onUbicacionInput(this)" style="width:90px;font-size:16px;padding:8px 10px">
+          <span style="font-size:12px;color:var(--text-secondary)">Cantidad total de personas que preguntaron por la ubicación hoy</span>
+        </div>
+      </div>
+
       <!-- Vendedoras -->
       <div class="card">
         <div class="section-label">Control diario por vendedora</div>
         <div class="table-wrap">
           <table id="vendorTable">
             <thead><tr>
-              <th>Vendedora</th><th>Prospectos Totales</th><th>Instagram</th><th>WhatsApp</th><th>Showroom</th><th>Ubicación</th><th>Respondidos</th><th>Interés alto</th><th>Citas</th><th>Cierres</th>
+              <th>Vendedora</th><th>Prospectos Totales</th><th>Instagram</th><th>WhatsApp</th><th>Showroom</th><th>Respondidos</th><th>Interés alto</th><th>Citas</th><th>Cierres</th>
             </tr></thead>
             <tbody id="vendorBody"></tbody>
           </table>
@@ -460,7 +469,7 @@ render();
    CONTROL DE LEADS
    ═══════════════════════════════════════ */
 const VENDORS = ['Sabrina','Tahiruma','Paola','Mariam'];
-const VCOLS = ['prospectos','instagram','whatsapp','showroom','ubicacion','respondidos','interes','citas','cierres'];
+const VCOLS = ['prospectos','instagram','whatsapp','showroom','respondidos','interes','citas','cierres'];
 const RUBRO_NAMES = ['Diseño de Interiores','Iluminación','Papel Tapiz','Domótica','Mobiliario','Sonido','Propiedades','Otros'];
 const DAYS_ES = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
 
@@ -557,12 +566,15 @@ async function saveToAirtable(dateStr) {
   const data = getDayData(dateStr);
 
   // Construir los 4 records de vendedoras
+  // Ubicación es una métrica del día (no por vendedora). Se guarda el mismo valor en las 4 filas.
+  const dayUbicacion = data.ubicacion || 0;
   const vendorRecords = VENDORS.map(v => {
     const vd = data.vendors[v];
     // Prospectos = Instagram + WhatsApp + Showroom (regla del negocio)
     vd.prospectos = (vd.instagram || 0) + (vd.whatsapp || 0) + (vd.showroom || 0);
     const fields = { Fecha: dateStr, Vendedora: v };
     VCOLS.forEach(c => { fields[FIELD_MAP_VENDOR[c]] = vd[c] || 0; });
+    fields['Ubicación'] = dayUbicacion;
     return { fields };
   });
 
@@ -680,7 +692,7 @@ function hasAnyData(data) {
 // ── LocalStorage helpers ──
 function dayKey(d) { return 'leads_' + d; }
 function getDayData(d) {
-  const out = { vendors: {}, rubros: {} };
+  const out = { vendors: {}, rubros: {}, ubicacion: 0 };
   VENDORS.forEach(v => { out.vendors[v] = {}; VCOLS.forEach(c => out.vendors[v][c] = 0); });
   RUBRO_NAMES.forEach(r => { out.rubros[r] = {}; VENDORS.forEach(v => out.rubros[r][v] = 0); });
   const s = localStorage.getItem(dayKey(d));
@@ -692,6 +704,7 @@ function getDayData(d) {
     RUBRO_NAMES.forEach(r => {
       if (stored.rubros && stored.rubros[r]) VENDORS.forEach(v => { out.rubros[r][v] = stored.rubros[r][v] || 0; });
     });
+    out.ubicacion = Number(stored.ubicacion) || 0;
   }
   return out;
 }
@@ -761,6 +774,12 @@ function isUserEditingCurrentDay() {
 }
 
 function renderDayUI(data) {
+  // Ubicación del día (input único, métrica diaria no por vendedora)
+  const ubiInput = document.getElementById('ubicacionInput');
+  if (ubiInput && document.activeElement !== ubiInput) {
+    ubiInput.value = data.ubicacion || 0;
+  }
+
   // Vendor table — Prospectos es calculado (Instagram + WhatsApp + Showroom), no editable
   let vh = '';
   VENDORS.forEach(v => {
@@ -829,6 +848,15 @@ function onVendorInput(el) {
     const cell = document.querySelector(`.vt-${col}`);
     if (cell) cell.textContent = t;
   });
+  renderSummaries();
+}
+
+function onUbicacionInput(el) {
+  const val = parseInt(el.value) || 0;
+  const data = getDayData(currentDate);
+  data.ubicacion = val;
+  saveDayData(currentDate, data);
+  scheduleSave(currentDate);
   renderSummaries();
 }
 
