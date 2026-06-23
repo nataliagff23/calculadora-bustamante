@@ -182,6 +182,7 @@ Esto evita el bug común donde el re-render destruye el input activo y se pierde
 | Instagram | Number |
 | WhatsApp | Number |
 | Showroom | Number |
+| Ubicación | Number |
 | Respondidos | Number |
 | Interés Alto | Number |
 | Citas | Number |

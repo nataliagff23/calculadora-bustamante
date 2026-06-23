@@ -316,7 +316,7 @@
         <div class="table-wrap">
           <table id="vendorTable">
             <thead><tr>
-              <th>Vendedora</th><th>Prospectos Totales</th><th>Instagram</th><th>WhatsApp</th><th>Showroom</th><th>Respondidos</th><th>Interés alto</th><th>Citas</th><th>Cierres</th>
+              <th>Vendedora</th><th>Prospectos Totales</th><th>Instagram</th><th>WhatsApp</th><th>Showroom</th><th>Ubicación</th><th>Respondidos</th><th>Interés alto</th><th>Citas</th><th>Cierres</th>
             </tr></thead>
             <tbody id="vendorBody"></tbody>
           </table>
@@ -460,7 +460,7 @@ render();
    CONTROL DE LEADS
    ═══════════════════════════════════════ */
 const VENDORS = ['Sabrina','Tahiruma','Paola','Mariam'];
-const VCOLS = ['prospectos','instagram','whatsapp','showroom','respondidos','interes','citas','cierres'];
+const VCOLS = ['prospectos','instagram','whatsapp','showroom','ubicacion','respondidos','interes','citas','cierres'];
 const RUBRO_NAMES = ['Diseño de Interiores','Iluminación','Papel Tapiz','Domótica','Mobiliario','Sonido','Propiedades','Otros'];
 const DAYS_ES = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
 
@@ -489,6 +489,7 @@ const FIELD_MAP_VENDOR = {
   instagram: 'Instagram',
   whatsapp: 'WhatsApp',
   showroom: 'Showroom',
+  ubicacion: 'Ubicación',
   respondidos: 'Respondidos',
   interes: 'Interés Alto',
   citas: 'Citas',
@@ -926,7 +927,7 @@ function aggregateDays(dates) {
   const rubroTotals = {}; RUBRO_NAMES.forEach(r => rubroTotals[r] = 0);
   const vendorBreakdown = {};
   VENDORS.forEach(v => {
-    vendorBreakdown[v] = { prospectos: 0, instagram: 0, whatsapp: 0, showroom: 0, respondidos: 0, interes: 0, citas: 0, cierres: 0 };
+    vendorBreakdown[v] = { prospectos: 0, instagram: 0, whatsapp: 0, showroom: 0, ubicacion: 0, respondidos: 0, interes: 0, citas: 0, cierres: 0 };
   });
   const dailyByVendor = {}; // { 'YYYY-MM-DD': { Sabrina: prospectos, Tahiruma: ... } }
   let daysWithData = 0, bestDay = '', bestDayVal = 0;
@@ -941,6 +942,7 @@ function aggregateDays(dates) {
       const wa = data.vendors[v].whatsapp || 0;
       const sh = data.vendors[v].showroom || 0;
       const prospectos = ig + wa + sh; // Prospectos = Instagram + WhatsApp + Showroom (regla de negocio)
+      const ubi = data.vendors[v].ubicacion || 0;
       const resp = data.vendors[v].respondidos || 0;
       const inter = data.vendors[v].interes || 0;
       const citas = data.vendors[v].citas || 0;
@@ -950,6 +952,7 @@ function aggregateDays(dates) {
       totals.instagram += ig;
       totals.whatsapp += wa;
       totals.showroom += sh;
+      totals.ubicacion += ubi;
       totals.respondidos += resp;
       totals.interes += inter;
       totals.citas += citas;
@@ -959,6 +962,7 @@ function aggregateDays(dates) {
       vendorBreakdown[v].instagram += ig;
       vendorBreakdown[v].whatsapp += wa;
       vendorBreakdown[v].showroom += sh;
+      vendorBreakdown[v].ubicacion += ubi;
       vendorBreakdown[v].respondidos += resp;
       vendorBreakdown[v].interes += inter;
       vendorBreakdown[v].citas += citas;
@@ -1096,6 +1100,7 @@ function renderSummaries() {
     <div class="cm-card"><div class="cm-val">${w.totals.instagram}</div><div class="cm-lbl">Instagram</div></div>
     <div class="cm-card"><div class="cm-val">${w.totals.whatsapp}</div><div class="cm-lbl">WhatsApp</div></div>
     <div class="cm-card"><div class="cm-val">${w.totals.showroom}</div><div class="cm-lbl">Showroom</div></div>
+    <div class="cm-card"><div class="cm-val">${w.totals.ubicacion}</div><div class="cm-lbl">Preguntaron por ubicación</div></div>
     <div class="cm-card"><div class="cm-val">${w.totals.respondidos}</div><div class="cm-lbl">Respondidos</div></div>
     <div class="cm-card"><div class="cm-val">${w.totals.citas}</div><div class="cm-lbl">Citas</div></div>
     <div class="cm-card"><div class="cm-val">${w.totals.cierres}</div><div class="cm-lbl">Cierres</div></div>
@@ -1118,6 +1123,7 @@ function renderSummaries() {
     <div class="cm-card"><div class="cm-val">${m.totals.instagram}</div><div class="cm-lbl">Instagram</div></div>
     <div class="cm-card"><div class="cm-val">${m.totals.whatsapp}</div><div class="cm-lbl">WhatsApp</div></div>
     <div class="cm-card"><div class="cm-val">${m.totals.showroom}</div><div class="cm-lbl">Showroom</div></div>
+    <div class="cm-card"><div class="cm-val">${m.totals.ubicacion}</div><div class="cm-lbl">Preguntaron por ubicación</div></div>
     <div class="cm-card"><div class="cm-val">${m.totals.respondidos}</div><div class="cm-lbl">Respondidos</div></div>
     <div class="cm-card"><div class="cm-val">${m.totals.citas}</div><div class="cm-lbl">Citas</div></div>
     <div class="cm-card"><div class="cm-val">${m.totals.cierres}</div><div class="cm-lbl">Cierres</div></div>
