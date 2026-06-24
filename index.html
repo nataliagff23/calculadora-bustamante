@@ -636,7 +636,7 @@ async function loadFromAirtable(dateStr) {
   ]);
 
   if (!vendorsList || !vendorsList.records) return null;
-  const data = { vendors: {}, rubros: {} };
+  const data = { vendors: {}, rubros: {}, ubicacion: 0 };
   VENDORS.forEach(v => { data.vendors[v] = {}; VCOLS.forEach(c => data.vendors[v][c] = 0); });
   RUBRO_NAMES.forEach(r => { data.rubros[r] = {}; VENDORS.forEach(v => data.rubros[r][v] = 0); });
 
@@ -646,6 +646,8 @@ async function loadFromAirtable(dateStr) {
     VCOLS.forEach(c => { data.vendors[v][c] = Number(r.fields[FIELD_MAP_VENDOR[c]]) || 0; });
     // Prospectos = Instagram + WhatsApp + Showroom (sobrescribe cualquier valor histórico)
     data.vendors[v].prospectos = (data.vendors[v].instagram || 0) + (data.vendors[v].whatsapp || 0) + (data.vendors[v].showroom || 0);
+    // Ubicación es métrica del día (mismo valor en las 4 filas); tomar el mayor encontrado
+    data.ubicacion = Math.max(data.ubicacion, Number(r.fields['Ubicación']) || 0);
     recordCache.vendors[cacheKey(dateStr, v)] = r.id;
   });
 
@@ -679,6 +681,7 @@ function flushPendingSave() {
 }
 
 function hasAnyData(data) {
+  if ((data.ubicacion || 0) > 0) return true;
   for (const v of VENDORS) {
     for (const c of VCOLS) if ((data.vendors[v] && data.vendors[v][c]) > 0) return true;
   }
@@ -951,11 +954,11 @@ function formatWeekLabel(ws) {
 }
 
 function aggregateDays(dates) {
-  const totals = {}; VCOLS.forEach(c => totals[c] = 0);
+  const totals = {}; VCOLS.forEach(c => totals[c] = 0); totals.ubicacion = 0;
   const rubroTotals = {}; RUBRO_NAMES.forEach(r => rubroTotals[r] = 0);
   const vendorBreakdown = {};
   VENDORS.forEach(v => {
-    vendorBreakdown[v] = { prospectos: 0, instagram: 0, whatsapp: 0, showroom: 0, ubicacion: 0, respondidos: 0, interes: 0, citas: 0, cierres: 0 };
+    vendorBreakdown[v] = { prospectos: 0, instagram: 0, whatsapp: 0, showroom: 0, respondidos: 0, interes: 0, citas: 0, cierres: 0 };
   });
   const dailyByVendor = {}; // { 'YYYY-MM-DD': { Sabrina: prospectos, Tahiruma: ... } }
   let daysWithData = 0, bestDay = '', bestDayVal = 0;
@@ -970,7 +973,6 @@ function aggregateDays(dates) {
       const wa = data.vendors[v].whatsapp || 0;
       const sh = data.vendors[v].showroom || 0;
       const prospectos = ig + wa + sh; // Prospectos = Instagram + WhatsApp + Showroom (regla de negocio)
-      const ubi = data.vendors[v].ubicacion || 0;
       const resp = data.vendors[v].respondidos || 0;
       const inter = data.vendors[v].interes || 0;
       const citas = data.vendors[v].citas || 0;
@@ -980,7 +982,6 @@ function aggregateDays(dates) {
       totals.instagram += ig;
       totals.whatsapp += wa;
       totals.showroom += sh;
-      totals.ubicacion += ubi;
       totals.respondidos += resp;
       totals.interes += inter;
       totals.citas += citas;
@@ -990,7 +991,6 @@ function aggregateDays(dates) {
       vendorBreakdown[v].instagram += ig;
       vendorBreakdown[v].whatsapp += wa;
       vendorBreakdown[v].showroom += sh;
-      vendorBreakdown[v].ubicacion += ubi;
       vendorBreakdown[v].respondidos += resp;
       vendorBreakdown[v].interes += inter;
       vendorBreakdown[v].citas += citas;
@@ -1000,6 +1000,8 @@ function aggregateDays(dates) {
       dayProspectos += prospectos;
       dailyByVendor[dt][v] = prospectos;
     });
+    // Ubicación es métrica del día (no por vendedora): sumar una sola vez por día
+    totals.ubicacion += data.ubicacion || 0;
     RUBRO_NAMES.forEach(r => {
       if (data.rubros[r]) VENDORS.forEach(v => rubroTotals[r] += data.rubros[r][v] || 0);
     });
@@ -1197,7 +1199,7 @@ async function prefetchSummaryRange() {
   const byDate = {};
   const ensureDay = dt => {
     if (!byDate[dt]) {
-      byDate[dt] = { vendors: {}, rubros: {} };
+      byDate[dt] = { vendors: {}, rubros: {}, ubicacion: 0 };
       VENDORS.forEach(v => { byDate[dt].vendors[v] = {}; VCOLS.forEach(c => byDate[dt].vendors[v][c] = 0); });
       RUBRO_NAMES.forEach(rn => { byDate[dt].rubros[rn] = {}; VENDORS.forEach(v => byDate[dt].rubros[rn][v] = 0); });
     }
@@ -1213,6 +1215,8 @@ async function prefetchSummaryRange() {
     VCOLS.forEach(c => { day.vendors[v][c] = Number(r.fields[FIELD_MAP_VENDOR[c]]) || 0; });
     // Asegurar consistencia: Prospectos = Instagram + WhatsApp + Showroom
     day.vendors[v].prospectos = (day.vendors[v].instagram || 0) + (day.vendors[v].whatsapp || 0) + (day.vendors[v].showroom || 0);
+    // Ubicación es métrica del día (mismo valor en las 4 filas); tomar el mayor
+    day.ubicacion = Math.max(day.ubicacion || 0, Number(r.fields['Ubicación']) || 0);
     recordCache.vendors[cacheKey(dt, v)] = r.id;
   });
 
